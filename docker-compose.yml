@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: iitd_drop
+      POSTGRES_USER: iitd_drop
+      POSTGRES_PASSWORD: local-only-change-me
+    ports:
+      - "5432:5432"
+    volumes:
+      - iitd_drop_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iitd_drop -d iitd_drop"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  iitd_drop_postgres:
