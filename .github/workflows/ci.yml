@@ -21,7 +21,12 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Run DB migrations (optional - requires DATABASE_URL secret)
         if: ${{ secrets.DATABASE_URL != '' }}

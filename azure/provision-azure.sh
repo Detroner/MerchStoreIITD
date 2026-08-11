@@ -9,6 +9,16 @@ LOC=${2:-eastus}
 ACR=${3:-myiitragistry}
 POSTGRES=${4:-iitd-postgres}
 APP=${5:-iitd-merch-app}
+# Optional sixth argument or environment variable ADMIN_PASSWORD; if not provided, a temporary password will be generated.
+ADMIN_PASSWORD=${6:-${ADMIN_PASSWORD:-}}
+if [ -z "$ADMIN_PASSWORD" ]; then
+  if command -v openssl >/dev/null 2>&1; then
+    ADMIN_PASSWORD=$(openssl rand -base64 16)
+  else
+    ADMIN_PASSWORD=$(uuidgen)
+  fi
+  echo "No ADMIN_PASSWORD provided; a temporary password was generated. Store it securely and rotate after provisioning."
+fi
 
 echo "Resource group: $RG"
 
@@ -19,7 +29,10 @@ az acr create --resource-group "$RG" --name "$ACR" --sku Standard --admin-enable
 ACR_LOGIN_SERVER=$(az acr show -n "$ACR" -g "$RG" --query loginServer -o tsv)
 
 # Create Azure Database for PostgreSQL Flexible Server
-az postgres flexible-server create --resource-group "$RG" --name "$POSTGRES" --location "$LOC" --sku-name Standard_B1ms --storage-size 32 --admin-user iitd_admin --admin-password "P@ssw0rdChangeMe!" --version 15
+az postgres flexible-server create --resource-group "$RG" --name "$POSTGRES" --location "$LOC" --sku-name Standard_B1ms --storage-size 32 --admin-user iitd_admin --admin-password "$ADMIN_PASSWORD" --version 15
+# Recommend storing ADMIN_PASSWORD in Azure Key Vault instead of plaintext. To create and store:
+# az keyvault create -g $RG -n myKeyVault
+# az keyvault secret set -n "db-admin-password" --vault-name myKeyVault --value "$ADMIN_PASSWORD"
 
 # Configure firewall to allow Azure services (adjust for security)
 az postgres flexible-server firewall-rule create -g "$RG" -s "$POSTGRES" -n AllowAzureServices --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
