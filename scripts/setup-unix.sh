@@ -68,7 +68,13 @@ if ! need_cmd docker || ! need_cmd docker-compose; then
 fi
 
 info "Installing npm dependencies..."
-npm ci --no-audit --no-fund
+# Use npm ci when package-lock.json exists for deterministic installs, otherwise npm install
+if [ -f package-lock.json ]; then
+  npm ci --no-audit --no-fund
+else
+  echo "package-lock.json not present; running npm install to create a lockfile"
+  npm install --no-audit --no-fund
+fi
 
 # Prompt for admin password to hash
 read -s -p "Enter admin password to hash (will not echo): " ADMIN_PASS

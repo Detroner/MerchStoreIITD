@@ -63,8 +63,15 @@ if (-not $docker) {
 }
 
 Write-Host "Node and Docker detected (or installed). Installing npm packages..." -ForegroundColor Green
-npm ci --no-audit --no-fund
-if ($LASTEXITCODE -ne 0) { AbortWith "npm ci failed." }
+# Use npm ci when package-lock.json is present for deterministic installs; fall back to npm install otherwise
+if (Test-Path -Path (Join-Path (Get-Location) 'package-lock.json')) {
+  npm ci --no-audit --no-fund
+  if ($LASTEXITCODE -ne 0) { AbortWith "npm ci failed." }
+} else {
+  Write-Host "package-lock.json not found — running npm install to generate a lockfile." -ForegroundColor Yellow
+  npm install --no-audit --no-fund
+  if ($LASTEXITCODE -ne 0) { AbortWith "npm install failed." }
+}
 
 # Generate admin password hash
 [string]$adminPass = $args[0]
