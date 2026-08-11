@@ -65,6 +65,20 @@ Two helper scripts are provided to automate developer setup:
 
 - Linux / macOS: `scripts/setup-unix.sh` — installs Node.js (NodeSource/homebrew) and Docker (get.docker.com / Homebrew Cask) when possible, runs `npm ci`, generates `ADMIN_PASSWORD_HASH`, starts Postgres via `docker compose`, runs migrations and boots the server.
 
+Key Vault helper
+
+A helper script is provided to create an Azure Key Vault and store secrets. Use it after you provision an Azure resource group and are logged in with the Azure CLI:
+
+```
+# example
+export AZ_SUBSCRIPTION_ID="<your-subscription-id>"
+export AZ_RESOURCE_GROUP="my-iitd-rg"
+export AZURE_REGION="eastus"
+./azure/create-keyvault-and-secrets.sh my-iitd-keyvault
+```
+
+The script will prompt for any missing secret values: DATABASE_URL, SESSION_SECRET, OTP_SECRET, ADMIN_PASSWORD_HASH.
+
 Usage (example):
 
 - Windows (PowerShell as Administrator):
