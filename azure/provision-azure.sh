@@ -52,6 +52,15 @@ az role assignment create --assignee "$PRINCIPAL_ID" --role "AcrPull" --scope "$
 echo
 echo "=== ACTIONS SECRETS / APP SETTINGS ==="
 echo "ACR_REGISTRY=$ACR_LOGIN_SERVER"
+# Retrieve ACR admin credentials so CI can push (only when admin-enabled true)
+if az acr credential show -n "$ACR" -g "$RG" >/dev/null 2>&1; then
+  ACR_USERNAME=$(az acr credential show -n "$ACR" -g "$RG" --query username -o tsv)
+  ACR_PASSWORD=$(az acr credential show -n "$ACR" -g "$RG" --query passwords[0].value -o tsv)
+  echo "ACR_USERNAME=$ACR_USERNAME"
+  echo "(ACR_PASSWORD is available; set it as a GitHub secret ACR_PASSWORD)"
+else
+  echo "ACR credentials not available (ACR might not be admin-enabled). Use a service principal or 'az acr login' workflow instead."
+fi
 echo "AZURE_WEBAPP_NAME=$APP"
 echo "AZURE_RESOURCE_GROUP=$RG"
 
@@ -59,4 +68,11 @@ echo
 echo "Attach the following connection string to your GitHub secrets and App Service configuration:"
 echo "DATABASE_URL=postgresql://iitd_admin:P@ssw0rdChangeMe!@${POSTGRES}.postgres.database.azure.com:5432/postgres?sslmode=require"
 
-echo "Provisioning complete. Push Docker images to $ACR_LOGIN_SERVER and update web app container settings or enable CI via GitHub Actions."
+echo "DATABASE_URL example (do NOT commit):"
+echo "postgresql://iitd_admin:<ADMIN_PASSWORD>@${POSTGRES}.postgres.database.azure.com:5432/postgres?sslmode=require"
+echo "Recommendation: store ADMIN_PASSWORD in Azure Key Vault and reference it for deployment or set DATABASE_URL as an App Setting or GitHub secret."
+
+echo "Provisioning complete. Push Docker images to $ACR_LOGIN_SERVER and update web app container settings or enable CI via GitHub Actions. To push locally:"
+echo "  docker build -t ${ACR_LOGIN_SERVER}/${APP}:latest ." 
+echo "  docker push ${ACR_LOGIN_SERVER}/${APP}:latest"
+echo "Or configure GitHub Actions (azure/login + docker/build-push-action) to push and update the webapp container."
