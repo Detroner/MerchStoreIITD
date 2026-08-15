@@ -1,5 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
 CREATE TYPE affiliation_kind AS ENUM ('student','faculty_staff','alumni','visitor_other');
 CREATE TYPE account_status AS ENUM ('active','suspended','deleted');
 CREATE TYPE product_status AS ENUM ('draft','active','archived');
