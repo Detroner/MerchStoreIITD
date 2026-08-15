@@ -60,7 +60,7 @@ class Handler(BaseHTTPRequestHandler):
   return session
  def do_GET(self):
   parsed=urlparse(self.path);path=parsed.path;params={k:v[0] for k,v in parse_qs(parsed.query).items()}
-  if path=='/api/store':return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS})
+  if path=='/api/store':return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS,'googleMapsBrowserKey':os.environ.get('GOOGLE_MAPS_BROWSER_KEY','')})
   if path=='/api/catalog':
    items=[p for p in PRODUCTS if p.get('status')=='active']
    if params.get('category','all')!='all':items=[p for p in items if p['categorySlug']==params['category']]
@@ -137,7 +137,23 @@ class Handler(BaseHTTPRequestHandler):
      surcharge=product['customization']['surcharge']
     subtotal+=variant['price']*qty;custom_total+=surcharge*qty;items.append({'variantId':variant['id'],'name':product['name'],'quantity':qty,'unitPrice':variant['price'],'customization':customization,'customizationSurcharge':surcharge})
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
-   shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'payment':{'provider':'Razorpay','mode':'demo','live':False}})
+   shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False}})
+  if path=='/api/checkout/demo-order':
+   session=self.require_customer()
+   if not session:return
+   address=next((x for x in ADDRESSES.get(session['user']['phone'],[]) if x['id']==str(body.get('addressId',''))),None)
+   if not address:return self.json_out({'error':'Select a delivery address before checkout.'},400)
+   subtotal=0;custom_total=0;items=[]
+   for request in body.get('items',[])[:50]:
+    product=next((p for p in PRODUCTS if any(v['id']==request.get('variantId') for v in p['variants'])),None)
+    variant=next((v for v in product['variants'] if v['id']==request.get('variantId')),None) if product else None
+    if not product or not variant:return self.json_out({'error':'An item is unavailable.'},409)
+    qty=max(1,min(10,int(request.get('qty',1))));customization=request.get('customization');surcharge=product['customization']['surcharge'] if customization and product['customizable'] else 0
+    subtotal+=variant['price']*qty;custom_total+=surcharge*qty;items.append({'id':secrets.token_hex(6),'productId':product['id'],'name':product['name'],'slug':product['slug'],'sku':variant['sku'],'size':variant['size'],'color':variant['color'],'quantity':qty,'unitPrice':variant['price'],'image':product['image'],'customization':customization,'deliveredAt':None,'reviewed':False})
+   if not items:return self.json_out({'error':'Your bag is empty.'},400)
+   shipping=0 if subtotal+custom_total>=149900 else 9900;order_id=secrets.token_hex(8);order_no=f"IITD-{order_id.upper()}";total=subtotal+custom_total+shipping
+   order={'id':order_id,'order_no':order_no,'customer_name':session['user'].get('fullName') or address['recipient_name'],'total':total,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-08-15T10:00:00Z','items':items,'shipping_address':address}
+   ORDERS.insert(0,order);return self.json_out({'order':{'id':order_id,'orderNo':order_no,'total':total,'walletApplied':0,'walletReward':0},'wallet':{'balance':0,'entries':[]}},201)
   if path=='/api/reviews':
    if not self.require_customer():return
    text=str(body.get('body','')).strip()
@@ -152,7 +168,7 @@ class Handler(BaseHTTPRequestHandler):
    if not session:return
    postal=re.sub(r'\D','',str(body.get('postalCode','')))
    if not all(str(body.get(x,'')).strip() for x in ['recipientName','line1','city','state']) or len(postal)!=6:return self.json_out({'error':'Recipient, street, city, state and a six-digit PIN code are required.'},400)
-   address={'id':secrets.token_hex(8),'label':str(body.get('label','Home'))[:30],'recipient_name':str(body['recipientName'])[:100],'phone_e164':'+91'+re.sub(r'\D','',str(body.get('phone','')))[-10:] if body.get('phone') else session['user']['phone'],'line_1':str(body['line1'])[:160],'line_2':str(body.get('line2',''))[:160],'landmark':str(body.get('landmark',''))[:100],'city':str(body['city'])[:80],'state':str(body['state'])[:80],'postal_code':postal,'is_default':bool(body.get('isDefault'))};book=ADDRESSES.setdefault(session['user']['phone'],[])
+   address={'id':secrets.token_hex(8),'label':str(body.get('label','Home'))[:30],'recipient_name':str(body['recipientName'])[:100],'phone_e164':'+91'+re.sub(r'\D','',str(body.get('phone','')))[-10:] if body.get('phone') else session['user']['phone'],'line_1':str(body['line1'])[:160],'line_2':str(body.get('line2','')).strip()[:160] or None,'landmark':str(body.get('landmark',''))[:100],'city':str(body['city'])[:80],'state':str(body['state'])[:80],'postal_code':postal,'is_default':bool(body.get('isDefault'))};book=ADDRESSES.setdefault(session['user']['phone'],[])
    if address['is_default']:
     for item in book:item['is_default']=False
    book.append(address);return self.json_out({'address':address},201)
@@ -176,6 +192,16 @@ class Handler(BaseHTTPRequestHandler):
   self.send_error(404)
  def do_PATCH(self):
   path=urlparse(self.path).path;body=self.body()
+  if path.startswith('/api/account/addresses/'):
+   session=self.require_customer()
+   if not session:return
+   target=path.rsplit('/',1)[1];book=ADDRESSES.get(session['user']['phone'],[]);address=next((x for x in book if x['id']==target),None)
+   if not address:return self.json_out({'error':'Address not found.'},404)
+   if body.get('isDefault') is True:
+    for item in book:item['is_default']=False
+    address['is_default']=True
+   if 'label' in body:address['label']=str(body.get('label') or address['label']).strip()[:30] or 'Home'
+   return self.json_out({'address':address})
   if path=='/api/account/profile':
    session=self.require_customer()
    if not session:return
