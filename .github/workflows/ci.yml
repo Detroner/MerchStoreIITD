@@ -43,8 +43,10 @@ jobs:
         run: |
           test -s migrations/001_initial_postgresql.sql
           test -s migrations/004_wallet_loyalty.sql
+          test -s migrations/006_story_reviews_and_placements.sql
           grep -q "wallet_accounts" migrations/004_wallet_loyalty.sql
           grep -q "wallet_reward_percent" migrations/004_wallet_loyalty.sql
+          grep -q "storyHero" migrations/006_story_reviews_and_placements.sql
 
   deploy:
     name: Migrate and deploy to Azure

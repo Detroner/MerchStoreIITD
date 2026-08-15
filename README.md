@@ -9,10 +9,10 @@ A creative, mobile-first merchandise storefront and operations Studio built with
 - Persistent cart with server-authoritative quote validation and demo checkout.
 - Phone OTP registration and login, affiliation-aware profiles, optional hostel details, durable sessions and a customer loyalty wallet.
 - Per-product wallet reward percentages controlled from Studio; rewards and redemptions are recorded in an auditable PostgreSQL ledger.
-- Customization is fixed to the Front placement for consistent production; style and text colour remain selectable.
-- Verified-purchase reviews from My Orders, a 400-word limit, up to three image descriptors and Studio moderation.
+- Product customization placements are controlled per product from Studio; customers see only the enabled Front, Back or Side choices.
+- Verified-purchase reviews from My Orders, a 400-word limit, up to three image descriptors and Studio moderation. Placeholder ratings and seeded review counts are not shown.
 - PostgreSQL schema for catalogue, variants, inventory, customers, addresses, orders, customization snapshots, coupons, reviews and idempotent payment events.
-- Studio controls for products, catalogue structure, themes, motion, coupons, reviews, customers, product/size demand and wallet adjustments.
+- Studio controls for products, catalogue structure, themes, motion, coupons, reviews, customers, product/size demand, wallet adjustments, customization placements and the complete Our Story page.
 - Argon2 administrator credentials, HttpOnly cookies, CSRF proofs, throttling, security headers and audit records.
 - Razorpay-ready boundaries with live charging intentionally disabled until credentials, signed webhooks and reconciliation checks are complete.
 
@@ -92,6 +92,12 @@ Usage (example):
   sudo ./scripts/setup-unix.sh
 
 If automatic installers are unavailable on your machine, follow the manual instructions above to install Node.js and Docker, then re-run the scripts. If you run into permission or PATH issues, open a fresh shell after installer finishes.
+
+## Content and merchandising controls
+
+The storefront has a dedicated `/our-story` page. Studio → **Our Story** edits its eyebrow, hero title, lead paragraph, motto label, motto, closing line, CTA label and image URL. Studio → **Products** controls each customizable product’s allowed placements; only the selected placements are presented to the customer and the server rejects any placement not enabled for that product.
+
+Ratings are calculated only from approved reviews. Products with no approved reviews do not show a score, star row, review count, or “be the first to review” placeholder. Studio moderation recalculates the product aggregate whenever a review changes state.
 
 ## Azure deployment and CI/CD
 
