@@ -84,7 +84,7 @@ app.post('/api/admin/catalog-structure',requireAdmin,async(req,res,next)=>{try{c
 
 app.use('/assets',express.static(path.join(root,'public','assets'),{maxAge:'1d'}));
 app.use('/src',express.static(path.join(root,'src'),{maxAge:'5m'}));
-app.get(['/', '/studio', '/studio/', '/cart', '/account', '/login', '/products/:slug'],(req,res)=>res.sendFile(path.join(root,'index.html')));
+app.get(['/', '/studio', '/studio/', '/cart', '/account', '/login', '/our-story', '/our-story/', '/products/:slug'],(req,res)=>res.sendFile(path.join(root,'index.html')));
 app.use((error,req,res,next)=>{console.error(JSON.stringify({message:error.message,route:req.path,requestId:req.headers['x-request-id']||null}));res.status(500).json({error:'The server could not complete that request.'})});
 const port=Number(process.env.PORT||4173);
 const server=app.listen(port,()=>console.log(`The IIT Delhi Drop is ready at http://localhost:${port}`));
