@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - iitd_drop_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - merchnet
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_SSL: "false"
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      SESSION_SECRET: ${SESSION_SECRET}
+      OTP_SECRET: ${OTP_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
+      RAZORPAY_MODE: ${RAZORPAY_MODE:-demo}
+      SMS_PROVIDER: ${SMS_PROVIDER:-demo}
+      PORT: "4173"
+      NODE_ENV: production
+    ports:
+      - "80:4173"
+    networks:
+      - merchnet
+
+volumes:
+  iitd_drop_postgres:
+
+networks:
+  merchnet:
+    driver: bridge

@@ -1,4 +1,5 @@
 import json, secrets, hmac, hashlib, mimetypes, re
+import os
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -156,7 +157,7 @@ class Handler(BaseHTTPRequestHandler):
     for item in book:item['is_default']=False
    book.append(address);return self.json_out({'address':address},201)
   if path=='/api/admin/login':
-   valid=hmac.compare_digest(str(body.get('email','')).lower(),'admin@iitdmerch.local') and hmac.compare_digest(str(body.get('password','')),'IITD@2026!')
+   valid=hmac.compare_digest(str(body.get('email','')).lower(),'admin@iitdmerch.local') and hmac.compare_digest(str(body.get('password','')),os.environ.get('ADMIN_PREVIEW_PASSWORD',''))
    if not valid:return self.json_out({'error':'Invalid administrator credentials.'},401)
    token=secrets.token_hex(24);ADMIN_SESSIONS.add(token);return self.json_out({'email':'admin@iitdmerch.local','role':'Super admin','proof':'demo-admin-proof'},cookie=f'admin_session={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800')
   if path=='/api/admin/catalog-structure':

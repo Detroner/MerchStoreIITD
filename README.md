@@ -6,11 +6,13 @@ A creative, mobile-first merchandise storefront and operations Studio built with
 
 - Responsive storefront with a stable embedded catalogue, category/type/size filters, sorting, four-card phone batches and graceful empty/error states.
 - Full product pages with exact size × colour variants, stock, customization preview, surcharge and production-time disclosure.
-- Persistent cart with server-authoritative quote validation.
-- Phone OTP registration and login, affiliation-aware profiles, optional hostel details and durable sessions.
+- Persistent cart with server-authoritative quote validation and demo checkout.
+- Phone OTP registration and login, affiliation-aware profiles, optional hostel details, durable sessions and a customer loyalty wallet.
+- Per-product wallet reward percentages controlled from Studio; rewards and redemptions are recorded in an auditable PostgreSQL ledger.
+- Customization is fixed to the Front placement for consistent production; style and text colour remain selectable.
 - Verified-purchase reviews from My Orders, a 400-word limit, up to three image descriptors and Studio moderation.
 - PostgreSQL schema for catalogue, variants, inventory, customers, addresses, orders, customization snapshots, coupons, reviews and idempotent payment events.
-- Studio controls for products, catalogue structure, themes, motion, coupons, reviews, customers and product/size demand.
+- Studio controls for products, catalogue structure, themes, motion, coupons, reviews, customers, product/size demand and wallet adjustments.
 - Argon2 administrator credentials, HttpOnly cookies, CSRF proofs, throttling, security headers and audit records.
 - Razorpay-ready boundaries with live charging intentionally disabled until credentials, signed webhooks and reconciliation checks are complete.
 
@@ -34,9 +36,9 @@ Local review credentials:
 
 - Customer OTP: `202626`
 - Studio email: `admin@iitdmerch.local`
-- Studio password: `IITD@2026!`
+- Studio password: set `ADMIN_PREVIEW_PASSWORD` in the shell before starting `work/preview_server.py`.
 
-These values exist only in the local review adapter and must never be used in a shared environment.
+The preview adapter no longer contains a hardcoded administrator password. These local values must never be used in a shared environment.
 
 ## Production setup with PostgreSQL
 
@@ -77,7 +79,7 @@ export AZURE_REGION="eastus"
 ./azure/create-keyvault-and-secrets.sh my-iitd-keyvault
 ```
 
-The script will prompt for any missing secret values: DATABASE_URL, SESSION_SECRET, OTP_SECRET, ADMIN_PASSWORD_HASH.
+The script will prompt for any missing secret values: DATABASE_URL, SESSION_SECRET, OTP_SECRET, ADMIN_PASSWORD_HASH. The deployed App Service should use managed identity and Key Vault references rather than plaintext app settings.
 
 Usage (example):
 
@@ -90,6 +92,12 @@ Usage (example):
   sudo ./scripts/setup-unix.sh
 
 If automatic installers are unavailable on your machine, follow the manual instructions above to install Node.js and Docker, then re-run the scripts. If you run into permission or PATH issues, open a fresh shell after installer finishes.
+
+## Azure deployment and CI/CD
+
+The live deployment uses the Linux App Service `merchstore-iitd-demo` and Azure Database for PostgreSQL Flexible Server in resource group `my-iitd-rg`. Production secrets are stored in Key Vault `merchstore-iitd-kv-2026`; App Service retrieves them through its managed identity. GitHub Actions authenticates to Azure through OIDC, opens a runner-only PostgreSQL firewall rule, runs `npm run db:migrate`, removes the rule even when a migration fails, deploys the ZIP package, restarts App Service and checks `/api/health`.
+
+For the exact manual commands, read `azure-manual-deployment-guide.md`. To inspect the PostgreSQL administrator password without printing it in application settings, use `az keyvault secret show --vault-name merchstore-iitd-kv-2026 --name POSTGRES-ADMIN-PASSWORD --query value -o tsv`. If the secret is unavailable, reset the PostgreSQL administrator password and update the Key Vault `DATABASE-URL` secret rather than committing a password.
 
 ## Payment status
 

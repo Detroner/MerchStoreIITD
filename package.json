@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
+    "check": "node --check server.mjs",
     "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {

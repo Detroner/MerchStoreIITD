@@ -1,4 +1,4 @@
-name: CI
+name: CI and Azure deployment
 
 on:
   push:
@@ -6,84 +6,123 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+  id-token: write
+
 env:
-  IMAGE_NAME: iitd-merch-app
+  AZURE_SUBSCRIPTION_ID: 92e0da8a-a2bd-4791-8b9b-412bf60101b1
+  AZURE_TENANT_ID: 624d5c4b-45c5-4122-8cd0-44f0f84e945d
+  AZURE_CLIENT_ID: ded95689-008b-4dc8-83bf-d5b75b1c9808
+  AZURE_RESOURCE_GROUP: my-iitd-rg
+  AZURE_WEBAPP_NAME: merchstore-iitd-demo
+  AZURE_KEYVAULT_NAME: merchstore-iitd-kv-2026
+  AZURE_POSTGRES_SERVER: merchstore-pg-central
 
 jobs:
-  build-and-push:
+  validate:
+    name: Validate application
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
 
       - name: Install dependencies
+        run: npm ci
+
+      - name: Check backend syntax
+        run: npm run check
+
+      - name: Validate migration files
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+          test -s migrations/001_initial_postgresql.sql
+          test -s migrations/004_wallet_loyalty.sql
+          grep -q "wallet_accounts" migrations/004_wallet_loyalty.sql
+          grep -q "wallet_reward_percent" migrations/004_wallet_loyalty.sql
 
-      - name: Run DB migrations (optional - requires DATABASE_URL secret)
-        if: ${{ secrets.DATABASE_URL != '' }}
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_SSL: ${{ secrets.DATABASE_SSL || 'true' }}
-        run: npm run db:migrate
-
-      - name: Log in to ACR
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ secrets.ACR_REGISTRY }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-  deploy-to-azure:
-    needs: build-and-push
+  deploy:
+    name: Migrate and deploy to Azure
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    environment: production
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Login to Azure
-        uses: azure/login@v1
+      - name: Login to Azure with OIDC
+        uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy container to Azure Web App
-        env:
-          IMAGE: ${{ secrets.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Read deployment secrets from Key Vault
         run: |
-          az webapp config container set \
-            --name ${{ secrets.AZURE_WEBAPP_NAME }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --docker-custom-image-name "$IMAGE" \
-            --docker-registry-server-url "https://${{ secrets.ACR_REGISTRY }}" \
-            --docker-registry-server-user "${{ secrets.ACR_USERNAME }}" \
-            --docker-registry-server-password "${{ secrets.ACR_PASSWORD }}"
+          echo "DATABASE_URL=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NAME" --name DATABASE-URL --query value -o tsv)" >> "$GITHUB_ENV"
+          echo "DATABASE_SSL=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NAME" --name DATABASE-SSL --query value -o tsv)" >> "$GITHUB_ENV"
 
-# Required repo secrets:
-# - ACR_REGISTRY (e.g. myregistry.azurecr.io)
-# - ACR_USERNAME, ACR_PASSWORD
-# - AZURE_CREDENTIALS (service principal JSON for azure/login)
-# - AZURE_WEBAPP_NAME, AZURE_RESOURCE_GROUP
-# Optional:
-# - DATABASE_URL (if you want migrations to run in CI)
+      - name: Open temporary PostgreSQL access for this runner
+        run: |
+          RUNNER_IP=$(curl -fsS https://api.ipify.org)
+          FIREWALL_RULE="github-actions-${GITHUB_RUN_ID}"
+          echo "FIREWALL_RULE=$FIREWALL_RULE" >> "$GITHUB_ENV"
+          az postgres flexible-server firewall-rule create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --server-name "$AZURE_POSTGRES_SERVER" \
+            --name "$FIREWALL_RULE" \
+            --start-ip-address "$RUNNER_IP" \
+            --end-ip-address "$RUNNER_IP" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            -o none
 
-# Notes:
-# - This workflow builds a Docker image and pushes it to Azure Container Registry, then updates an Azure Web App for Containers to use the new image.
-# - Ensure the Azure service principal has permissions to modify the target Web App and that the ACR credentials are valid.
-# - For private networks, consider running migrations as part of a deployment job inside Azure where the runner has DB network access.
+      - name: Run PostgreSQL migrations
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DATABASE_SSL: ${{ env.DATABASE_SSL }}
+        run: npm ci && npm run db:migrate
+
+      - name: Remove temporary PostgreSQL access
+        if: always()
+        run: |
+          az postgres flexible-server firewall-rule delete \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --server-name "$AZURE_POSTGRES_SERVER" \
+            --name "$FIREWALL_RULE" \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            --yes \
+            -o none || true
+
+      - name: Package application
+        run: |
+          zip -qr /tmp/merchstore-iitd-${GITHUB_SHA}.zip . \
+            -x '.git/*' 'node_modules/*' '.github/*' 'tools/*' '*.log'
+
+      - name: Deploy application package to App Service
+        run: |
+          az webapp deploy \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME" \
+            --src-path "/tmp/merchstore-iitd-${GITHUB_SHA}.zip" \
+            --type zip \
+            --async true \
+            --subscription "$AZURE_SUBSCRIPTION_ID"
+
+      - name: Restart App Service
+        run: az webapp restart --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --subscription "$AZURE_SUBSCRIPTION_ID"
+
+      - name: Verify health endpoint
+        run: |
+          for attempt in $(seq 1 18); do
+            if curl --fail --silent --show-error --max-time 15 "https://${AZURE_WEBAPP_NAME}.azurewebsites.net/api/health"; then
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
