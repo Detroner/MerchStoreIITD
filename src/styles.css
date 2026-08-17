@@ -55,3 +55,31 @@
 .story-page .story-page-label{justify-content:flex-start}.story-page .story-hero{position:relative;isolation:isolate;overflow:hidden;background:transparent;padding-bottom:5rem}.story-page .story-hero:before{content:'';position:absolute;z-index:-1;width:78%;height:115%;left:-24%;top:-24%;border-radius:50%;background:radial-gradient(circle,rgba(231,215,177,.42) 0,rgba(231,215,177,.18) 38%,transparent 72%);filter:blur(20px);pointer-events:none}.story-page[data-theme="dark"] .story-hero:before{background:radial-gradient(circle,rgba(214,107,75,.22) 0,rgba(95,124,255,.12) 38%,transparent 72%)}
 .story-page[data-theme="dark"] .story-page-label,.story-page[data-theme="dark"] .story-hero p,.story-page[data-theme="dark"] .story-manifesto p{color:var(--muted-ink)}
 @media(max-width:760px){.address-composer-heading{align-items:stretch;flex-direction:column}.add-address-button{width:100%;justify-content:space-between}.story-page .story-hero:before{width:135%;left:-35%;top:-15%}}
+
+
+/* High-contrast dark visual system: restrained, motion-led, and intentionally flat. */
+.store[data-theme="dark"]{--paper:#101014;--ink:#f7f6ef;--primary:#ff4b4b;--secondary:#7f8cff;--accent:#f4d35e;--surface:#19191f;--surface-raised:#202027;--surface-muted:#292931;--muted-ink:#d1d0c8;--border:rgba(247,246,239,.18);--ticker-ink:#101014;background:#101014!important;color:#f7f6ef!important}
+.store[data-theme="dark"] :where(h1,h2,h3,h4,strong,b,.brand,.site-nav a,.nav-actions a,.site-footer a){color:#f7f6ef!important}
+.store[data-theme="dark"] :where(p,small,.hero-copy p,.catalog-heading p,.story p,.story-manifesto p,.account-shell p,.order-summary small,.site-footer p){color:#d1d0c8!important;opacity:1!important}
+.store[data-theme="dark"] .kicker{color:#f4d35e!important}
+.store .ticker{height:30px!important;display:flex!important;align-items:center!important;overflow:hidden!important;background:#ff4b4b!important;color:#101014!important;border:0!important}
+.store .ticker>div{color:#101014!important;font:800 9px/1 'Space Grotesk',sans-serif!important;letter-spacing:.14em!important;white-space:nowrap!important;text-shadow:none!important;opacity:1!important}
+.store .site-nav{min-height:78px!important;padding-top:0!important;padding-bottom:0!important;border-bottom:1px solid var(--border)!important}
+.store[data-theme="dark"] .site-nav{background:#101014!important}
+.store[data-theme="dark"] .theme-switch{color:#f7f6ef!important}.store[data-theme="dark"] .theme-switch i{background:#3a3a44!important;border-color:#5a5a64!important}.store[data-theme="dark"] .theme-switch input:checked+i{background:#7f8cff!important}
+.store[data-theme="dark"] .brand span{color:#ff4b4b!important}.store[data-theme="dark"] .bag-link b{background:#ff4b4b!important;color:#101014!important}
+.store[data-theme="dark"] .primary-cta,.store[data-theme="dark"] .add-address-button,.store[data-theme="dark"] .account-profile-editor button{background:#ff4b4b!important;color:#101014!important;box-shadow:4px 4px 0 #f7f6ef!important}
+.store[data-theme="dark"] .kinetic-line{background:#202027!important;color:#f7f6ef!important;border-color:#393944!important}
+.store[data-theme="dark"] .site-footer{background:#101014!important;border-top-color:var(--border)!important}
+.store[data-theme="dark"] .site-footer small{color:#aeadb0!important}
+/* Story is a single clean editorial panel—not a cropped background effect. */
+.story-page .story-hero{position:relative!important;isolation:auto!important;overflow:visible!important;min-height:calc(100vh - 140px)!important;margin-top:30px!important;padding:clamp(2rem,6vw,6rem)!important;background:#fff8e8!important;border:1px solid rgba(23,23,29,.18)!important;box-shadow:none!important}
+.story-page .story-hero:before{display:none!important}
+.story-page .story-hero h1{color:#17171d!important;max-width:9ch!important}.story-page .story-hero p{color:#4f4d49!important;max-width:34rem!important}.story-page .story-hero-art{border-radius:0!important;transform:none!important;box-shadow:12px 12px 0 #ff4b4b!important;border:1px solid #17171d!important;background:#17171d!important}.story-page .story-hero-art img{border-radius:0!important;display:block!important}.story-page .story-manifesto{border-top:1px solid var(--border)!important}
+.story-page[data-theme="dark"] .story-hero{background:#19191f!important;border-color:#34343e!important}.story-page[data-theme="dark"] .story-hero h1{color:#f7f6ef!important}.story-page[data-theme="dark"] .story-hero p{color:#d1d0c8!important}.story-page[data-theme="dark"] .story-hero-art{box-shadow:12px 12px 0 #ff4b4b!important;border-color:#f7f6ef!important}
+/* Guarantee readable controls and cards in dark mode, including legacy hard-coded light components. */
+.store[data-theme="dark"] :where(.catalog-card,.filter-sheet,.cart-address-panel,.saved-address,.address-capture,.account-addresses,.account-address-row,.wallet-card,.order-list>article,.account-placeholder,.order-summary,.cart-item-v2,.account-profile-editor){background:#202027!important;color:#f7f6ef!important;border-color:#393944!important}
+.store[data-theme="dark"] :where(input,select,textarea){background:#15151a!important;color:#f7f6ef!important;border-color:#5a5a64!important}
+.store[data-theme="dark"] :where(input,select,textarea)::placeholder{color:#b6b5b2!important;opacity:1!important}
+.store[data-theme="dark"] :where(.catalog-info span,.catalog-info s,.cart-item-v2 p,.order-product p,.address-form label,.account-profile-editor label){color:#d1d0c8!important}
+@media(max-width:760px){.store .site-nav{min-height:64px!important}.store .ticker{height:28px!important}.story-page .story-hero{margin-top:16px!important;min-height:auto!important;padding:2rem 1.2rem!important}.story-page .story-hero-art{box-shadow:8px 8px 0 #ff4b4b!important}}
