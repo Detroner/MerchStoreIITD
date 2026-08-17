@@ -103,7 +103,7 @@ class Handler(BaseHTTPRequestHandler):
      else:breakdown.append({'product_name':item['name'],'size':item['size'],'units':item['quantity'],'orders':1})
    return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':COUPONS,'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':'demo','live':False,'database':'PostgreSQL'}})
   if path.startswith('/assets/'):file=ROOT/'public'/path.lstrip('/')
-  else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login'] or path.startswith('/products/') else path.lstrip('/'))
+  else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login','/our-story','/our-story/'] or path.startswith('/products/') else path.lstrip('/'))
   if file.is_file():
    payload=file.read_bytes();self.send_response(200);self.send_header('Content-Type',mimetypes.guess_type(file)[0] or 'application/octet-stream');self.send_header('Content-Length',len(payload));self.end_headers();return self.wfile.write(payload)
   self.send_error(404)
@@ -215,7 +215,7 @@ class Handler(BaseHTTPRequestHandler):
    review=next((r for r in REVIEWS if r['id']==path.rsplit('/',1)[1]),None)
    if not review:return self.json_out({'error':'Review not found.'},404)
    review['status']=body.get('status','pending');return self.json_out({'ok':True})
-  if path=='/api/admin/settings' or path.startswith('/api/admin/products/') or path.startswith('/api/admin/coupons/'):
+  if path=='/api/admin/settings' or path=='/api/admin/products' or path.startswith('/api/admin/products/') or path=='/api/admin/coupons' or path.startswith('/api/admin/coupons/'):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
    if path=='/api/admin/settings':
