@@ -83,3 +83,16 @@
 .store[data-theme="dark"] :where(input,select,textarea)::placeholder{color:#b6b5b2!important;opacity:1!important}
 .store[data-theme="dark"] :where(.catalog-info span,.catalog-info s,.cart-item-v2 p,.order-product p,.address-form label,.account-profile-editor label){color:#d1d0c8!important}
 @media(max-width:760px){.store .site-nav{min-height:64px!important}.store .ticker{height:28px!important}.story-page .story-hero{margin-top:16px!important;min-height:auto!important;padding:2rem 1.2rem!important}.story-page .story-hero-art{box-shadow:8px 8px 0 #ff4b4b!important}}
+
+
+/* Story-page colour semantics: a light surface always receives dark type, including while global dark mode is active. */
+.story-page,.story-page[data-theme="dark"]{background:linear-gradient(135deg,#f8e273 0%,#f4d65a 46%,#ebc33f 100%)!important;color:#101014!important}
+.story-page main{background:transparent!important;min-height:calc(100vh - 108px)}
+.story-page .story-hero,.story-page[data-theme="dark"] .story-hero{background:transparent!important;border:0!important;box-shadow:none!important;margin-top:0!important;min-height:calc(100vh - 108px)!important}
+.story-page :where(.story-hero h1,.story-hero h2,.story-hero p,.story-manifesto h1,.story-manifesto h2,.story-manifesto p,.kicker,.story-page-label){color:#101014!important}
+.story-page .story-hero-art{border-color:#101014!important;box-shadow:12px 12px 0 #ff4b4b!important}
+.story-page .primary-cta{background:#ff4b4b!important;color:#101014!important;box-shadow:4px 4px 0 #101014!important}
+.story-page .site-footer,.story-page[data-theme="dark"] .site-footer{background:transparent!important;border-top:1px solid rgba(16,16,20,.32)!important;color:#101014!important}
+.story-page .site-footer :where(div,p,a,small),.story-page[data-theme="dark"] .site-footer :where(div,p,a,small){color:#101014!important}
+.story-page[data-theme="dark"] .story-hero h1,.story-page[data-theme="dark"] .story-hero p,.story-page[data-theme="dark"] .story-manifesto h2,.story-page[data-theme="dark"] .story-manifesto p{color:#101014!important}
+@media(max-width:760px){.story-page .story-hero,.story-page[data-theme="dark"] .story-hero{min-height:auto!important;padding-top:3rem!important;padding-bottom:3rem!important}.story-page .story-hero-art{box-shadow:8px 8px 0 #ff4b4b!important}}
