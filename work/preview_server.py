@@ -148,7 +148,7 @@ class Handler(BaseHTTPRequestHandler):
     product=next((p for p in PRODUCTS if any(v['id']==request.get('variantId') for v in p['variants'])),None)
     variant=next((v for v in product['variants'] if v['id']==request.get('variantId')),None) if product else None
     if not product or not variant:return self.json_out({'error':'An item is unavailable.'},409)
-    qty=max(1,min(10,int(request.get('qty',1))));customization=request.get('customization');surcharge=product['customization']['surcharge'] if customization and product['customizable'] else 0
+    qty=max(1,min(10,int(request.get('qty',1))));customization=request.get('customization');surcharge=0
     subtotal+=variant['price']*qty;custom_total+=surcharge*qty;items.append({'id':secrets.token_hex(6),'productId':product['id'],'name':product['name'],'slug':product['slug'],'sku':variant['sku'],'size':variant['size'],'color':variant['color'],'quantity':qty,'unitPrice':variant['price'],'image':product['image'],'customization':customization,'deliveredAt':None,'reviewed':False})
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
    shipping=0 if subtotal+custom_total>=149900 else 9900;order_id=secrets.token_hex(8);order_no=f"IITD-{order_id.upper()}";total=subtotal+custom_total+shipping
@@ -167,8 +167,8 @@ class Handler(BaseHTTPRequestHandler):
    session=self.require_customer()
    if not session:return
    postal=re.sub(r'\D','',str(body.get('postalCode','')))
-   if not all(str(body.get(x,'')).strip() for x in ['recipientName','line1','city','state']) or len(postal)!=6:return self.json_out({'error':'Recipient, street, city, state and a six-digit PIN code are required.'},400)
-   address={'id':secrets.token_hex(8),'label':str(body.get('label','Home'))[:30],'recipient_name':str(body['recipientName'])[:100],'phone_e164':'+91'+re.sub(r'\D','',str(body.get('phone','')))[-10:] if body.get('phone') else session['user']['phone'],'line_1':str(body['line1'])[:160],'line_2':str(body.get('line2','')).strip()[:160] or None,'landmark':str(body.get('landmark',''))[:100],'city':str(body['city'])[:80],'state':str(body['state'])[:80],'postal_code':postal,'is_default':bool(body.get('isDefault'))};book=ADDRESSES.setdefault(session['user']['phone'],[])
+   if not str(body.get('mapsPlaceId','')).strip() or not all(str(body.get(x,'')).strip() for x in ['recipientName','line1','city','state']) or len(postal)!=6:return self.json_out({'error':'Select an address from Google Maps, then complete the required address fields.'},400)
+   address={'id':secrets.token_hex(8),'label':str(body.get('label','Home'))[:30],'recipient_name':str(body['recipientName'])[:100],'phone_e164':'+91'+re.sub(r'\D','',str(body.get('phone','')))[-10:] if body.get('phone') else session['user']['phone'],'line_1':str(body['line1'])[:160],'maps_place_id':str(body.get('mapsPlaceId','')).strip(),'line_2':str(body.get('line2','')).strip()[:160] or None,'landmark':str(body.get('landmark',''))[:100],'city':str(body['city'])[:80],'state':str(body['state'])[:80],'postal_code':postal,'is_default':bool(body.get('isDefault'))};book=ADDRESSES.setdefault(session['user']['phone'],[])
    if address['is_default']:
     for item in book:item['is_default']=False
    book.append(address);return self.json_out({'address':address},201)
