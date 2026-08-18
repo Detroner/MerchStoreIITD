@@ -96,3 +96,5 @@
 .story-page .site-footer :where(div,p,a,small),.story-page[data-theme="dark"] .site-footer :where(div,p,a,small){color:#101014!important}
 .story-page[data-theme="dark"] .story-hero h1,.story-page[data-theme="dark"] .story-hero p,.story-page[data-theme="dark"] .story-manifesto h2,.story-page[data-theme="dark"] .story-manifesto p{color:#101014!important}
 @media(max-width:760px){.story-page .story-hero,.story-page[data-theme="dark"] .story-hero{min-height:auto!important;padding-top:3rem!important;padding-bottom:3rem!important}.story-page .story-hero-art{box-shadow:8px 8px 0 #ff4b4b!important}}
+
+.payment-gate>strong.provider-ready{background:var(--secondary);color:#fff}.studio-callout strong{font:900 28px 'Space Grotesk';letter-spacing:1px}.order-summary>small{display:block;line-height:1.5;margin-top:14px}.order-success p{line-height:1.5}

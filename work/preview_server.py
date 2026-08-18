@@ -60,7 +60,8 @@ class Handler(BaseHTTPRequestHandler):
   return session
  def do_GET(self):
   parsed=urlparse(self.path);path=parsed.path;params={k:v[0] for k,v in parse_qs(parsed.query).items()}
-  if path=='/api/store':return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS,'googleMapsBrowserKey':os.environ.get('GOOGLE_MAPS_BROWSER_KEY','')})
+  if path=='/api/store':
+   mode=os.environ.get('RAZORPAY_MODE','demo');configured=mode in ['test','live'] and bool(os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'));return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS,'googleMapsBrowserKey':os.environ.get('GOOGLE_MAPS_BROWSER_KEY',''),'payment':{'provider':'Razorpay','mode':mode,'configured':configured,'live':configured,'keyId':os.environ.get('RAZORPAY_KEY_ID','') if configured else ''},'sms':{'provider':os.environ.get('SMS_PROVIDER','demo'),'configured':False}})
   if path=='/api/catalog':
    items=[p for p in PRODUCTS if p.get('status')=='active']
    if params.get('category','all')!='all':items=[p for p in items if p['categorySlug']==params['category']]
@@ -101,7 +102,7 @@ class Handler(BaseHTTPRequestHandler):
      row=next((x for x in breakdown if x['product_name']==item['name'] and x['size']==item['size']),None)
      if row:row['units']+=item['quantity'];row['orders']+=1
      else:breakdown.append({'product_name':item['name'],'size':item['size'],'units':item['quantity'],'orders':1})
-   return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':COUPONS,'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':'demo','live':False,'database':'PostgreSQL'}})
+   mode=os.environ.get('RAZORPAY_MODE','demo');configured=mode in ['test','live'] and bool(os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'));return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':COUPONS,'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':mode,'configured':configured,'live':configured,'keyId':os.environ.get('RAZORPAY_KEY_ID','') if configured else '','webhookConfigured':bool(os.environ.get('RAZORPAY_WEBHOOK_SECRET')),'database':'PostgreSQL'},'sms':{'provider':os.environ.get('SMS_PROVIDER','demo'),'configured':False}})
   if path.startswith('/assets/'):file=ROOT/'public'/path.lstrip('/')
   else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login','/our-story','/our-story/'] or path.startswith('/products/') else path.lstrip('/'))
   if file.is_file():
@@ -134,10 +135,10 @@ class Handler(BaseHTTPRequestHandler):
      if not product['customizable']:return self.json_out({'error':f"{product['name']} is not customizable."},400)
      text=str(customization.get('text','')).strip()
      if not text or len(text)>product['customization']['max']:return self.json_out({'error':'The customization text is not valid.'},400)
-     surcharge=product['customization']['surcharge']
+     surcharge=0
     subtotal+=variant['price']*qty;custom_total+=surcharge*qty;items.append({'variantId':variant['id'],'name':product['name'],'quantity':qty,'unitPrice':variant['price'],'customization':customization,'customizationSurcharge':surcharge})
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
-   shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False}})
+   shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':os.environ.get('RAZORPAY_MODE','demo'),'configured':False,'live':False}})
   if path=='/api/checkout/demo-order':
    session=self.require_customer()
    if not session:return

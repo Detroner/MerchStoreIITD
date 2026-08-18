@@ -5,8 +5,8 @@ A creative, mobile-first merchandise storefront and operations Studio built with
 ## What is included
 
 - Responsive storefront with a stable embedded catalogue, category/type/size filters, sorting, four-card phone batches and graceful empty/error states.
-- Full product pages with exact size × colour variants, stock, customization preview, surcharge and production-time disclosure.
-- Persistent cart with server-authoritative quote validation and demo checkout.
+- Full product pages with exact size × colour variants, stock, customization preview and production-time disclosure; personalization is included in the product price.
+- Persistent cart with server-authoritative quote validation, non-charging demo checkout and optional Razorpay Standard Checkout when configured.
 - Phone OTP registration and login, affiliation-aware profiles, optional hostel details, durable sessions and a customer loyalty wallet.
 - Per-product wallet reward percentages controlled from Studio; rewards and redemptions are recorded in an auditable PostgreSQL ledger.
 - Product customization placements are controlled per product from Studio; customers see only the enabled Front, Back or Side choices.
@@ -14,7 +14,7 @@ A creative, mobile-first merchandise storefront and operations Studio built with
 - PostgreSQL schema for catalogue, variants, inventory, customers, addresses, orders, customization snapshots, coupons, reviews and idempotent payment events.
 - Studio controls for products, catalogue structure, themes, motion, coupons, reviews, customers, product/size demand, wallet adjustments, customization placements and the complete Our Story page.
 - Argon2 administrator credentials, HttpOnly cookies, CSRF proofs, throttling, security headers and audit records.
-- Razorpay-ready boundaries with live charging intentionally disabled until credentials, signed webhooks and reconciliation checks are complete.
+- Razorpay Standard Checkout and MSG91 OTP adapters with demo fallbacks; external providers remain disabled until credentials and merchant onboarding are configured.
 
 ## Quick visual review (no database required)
 
@@ -105,15 +105,21 @@ The live deployment uses the Linux App Service `merchstore-iitd-demo` and Azure 
 
 For the exact manual commands, read `azure-manual-deployment-guide.md`. To inspect the PostgreSQL administrator password without printing it in application settings, use `az keyvault secret show --vault-name merchstore-iitd-kv-2026 --name POSTGRES-ADMIN-PASSWORD --query value -o tsv`. If the secret is unavailable, reset the PostgreSQL administrator password and update the Key Vault `DATABASE-URL` secret rather than committing a password.
 
-## Payment status
+## Payment and messaging configuration
 
-Razorpay is adapter-ready but remains in demo mode. Before accepting money, complete merchant onboarding, provide test credentials through managed secrets, create server-owned orders, verify webhook signatures, deduplicate webhook events, test failed/duplicate callbacks, reconcile settlements and refunds, and complete a controlled live penny test. Never mark an order paid from a browser redirect alone.
+The application is safe to run without purchasing either service. With the default `RAZORPAY_MODE=demo` and `SMS_PROVIDER=demo`, checkout remains non-charging and OTP verification uses the configured demo code. The provider adapters activate only when their credentials are present.
+
+For Razorpay, first use test credentials: set `RAZORPAY_MODE=test`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET`. The server creates the Razorpay order, the browser opens Standard Checkout, the server verifies the `razorpay_order_id|razorpay_payment_id` signature, and the webhook endpoint deduplicates events before settling the order. Switch to `RAZORPAY_MODE=live` only after merchant onboarding, test payments, failed/duplicate callback tests, reconciliation and a controlled live penny test. Never mark an order paid from a browser redirect alone.
+
+For MSG91, create an OTP template and set `SMS_PROVIDER=msg91`, `MSG91_AUTHKEY`, and `MSG91_TEMPLATE_ID`. The server calls MSG91 to send and verify the OTP; no local OTP is exposed in the response when MSG91 is active. If these values are absent, the app refuses to claim MSG91 is active and stays in demo mode.
+
+Store these values as Azure Key Vault secrets and reference them from App Service settings. Do not commit them to `.env`, the repository, client-side code or browser-visible responses.
 
 ## External adapters still required
 
-- SMS provider for OTP delivery
+- MSG91 account, OTP template and auth key for real SMS delivery
+- Razorpay merchant onboarding, test/live credentials and webhook secret for real payments
 - S3-compatible object storage and CDN for product/review images
-- Razorpay test/live credentials and webhook secret
 - Transactional email provider
 - Shipping aggregator or courier workflow
 - Hosted observability and alerting
