@@ -98,3 +98,19 @@
 @media(max-width:760px){.story-page .story-hero,.story-page[data-theme="dark"] .story-hero{min-height:auto!important;padding-top:3rem!important;padding-bottom:3rem!important}.story-page .story-hero-art{box-shadow:8px 8px 0 #ff4b4b!important}}
 
 .payment-gate>strong.provider-ready{background:var(--secondary);color:#fff}.studio-callout strong{font:900 28px 'Space Grotesk';letter-spacing:1px}.order-summary>small{display:block;line-height:1.5;margin-top:14px}.order-success p{line-height:1.5}
+
+
+/* Keep mobile header controls visible, balanced and easy to tap. */
+@media(max-width:760px){
+  .store .site-nav{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:center}
+  .store .menu-trigger{display:grid;place-content:center;width:44px;min-width:44px;height:44px;padding:9px;color:var(--ink);position:relative;z-index:1}
+  .store .menu-trigger i{display:block;width:22px;height:2px;background:currentColor;margin:3px auto;opacity:1;visibility:visible}
+  .store .brand{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;justify-self:start}
+  .store .nav-actions{gap:4px;justify-self:end;min-width:0}
+  .store .nav-actions>a:not(.bag-link),.store .nav-actions>.logout-link{display:none}
+  .store .theme-switch{display:grid;place-items:center;width:44px;height:44px;padding:0;cursor:pointer}
+  .store .theme-switch>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .store .theme-switch i{width:36px;height:20px}
+  .store .bag-link{width:40px;height:44px;display:grid;place-items:center}
+  .store .bag-link b{position:absolute;right:0;top:1px}
+}
