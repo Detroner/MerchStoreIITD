@@ -3,10 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node server.mjs",
-    "start": "node server.mjs",
-    "check": "node --check server.mjs",
-    "db:migrate": "node scripts/migrate.mjs"
+    "dev": "node --env-file=.env server.mjs",
+    "start": "node --env-file=.env server.mjs",
+    "db:migrate": "node --env-file=.env scripts/migrate.mjs",
+    "check": "node --check server.mjs && node work/source_selftest.mjs"
   },
   "dependencies": {
     "argon2": "0.44.0",
