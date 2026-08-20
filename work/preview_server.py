@@ -40,6 +40,8 @@ for product in PRODUCTS:
   product['colorways'].append({'id':cid,'name':name,'slug':slug,'swatch':swatch,'cardColor':product['color'],'active':True,'showInCatalog':True,'sortOrder':index,'image':product['image']})
   for variant in product['variants']:
    if variant['color']==name:variant['colorwayId']=cid
+ product.update({'category_id':next((x['id'] for x in CATEGORIES if x['slug']==product['categorySlug']),''),'product_type_id':next((x['id'] for x in TYPES if x['slug']==product['typeSlug']),''),'short_description':product['description'][:120],'sort_order':len(PRODUCTS),'deleted_at':None})
+ product['media']=[{'id':f"media-{product['id']}-1",'url':product['image'],'type':'image','mimeType':'image/png','fileSize':None,'poster':None,'alt':product['name'],'sortOrder':0,'colorwayId':None,'active':True}]
 
 REVIEWS=[{'id':'review-1','product_id':'hood','rating':5,'title':'Feels properly premium','body':'The weight is perfect for winter mornings and the fit is relaxed without looking oversized. The embroidery stayed sharp after washing.','status':'approved','full_name':'Ananya S.','submitted_at':'2026-08-07T10:00:00Z'},{'id':'review-2','product_id':'hood','rating':4,'title':'A new late-lab uniform','body':'Warm, comfortable and the pockets are actually useful. I sized up for a roomier fit.','status':'approved','full_name':'Kabir M.','submitted_at':'2026-08-05T10:00:00Z'},{'id':'review-3','product_id':'tee','rating':5,'title':'The graphic lands','body':'Soft fabric and a clean print. Looks even better in person.','status':'pending','full_name':'Rhea A.','submitted_at':'2026-08-09T10:00:00Z'}]
 USERS={};SESSIONS={};OTP={};ADMIN_SESSIONS=set();ADDRESSES={}
@@ -137,7 +139,7 @@ class Handler(BaseHTTPRequestHandler):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
    customers=[{'id':str(i+1),'full_name':u.get('fullName',''),'phone_e164':phone,'affiliation':u.get('affiliation'),'created_at':'2026-08-09T10:00:00Z'} for i,(phone,u) in enumerate(USERS.items())]
-   products=[{'id':p['id'],'name':p['name'],'slug':p['slug'],'base_price':p['price'],'compare_price':p['compare_price'],'badge':p['badge'],'card_color':p['color'],'status':p['status'],'featured':p['featured'],'customizable':p['customizable'],'customization':p['customization'],'colorways':p['colorways'],'category':p['category'],'product_type':p['type'],'image':p['image'],'stock':sum(v['stock'] for v in p['variants'])} for p in PRODUCTS]
+   products=[{'id':p['id'],'name':p['name'],'slug':p['slug'],'category_id':p['category_id'],'product_type_id':p['product_type_id'],'short_description':p.get('short_description',''),'description':p['description'],'base_price':p['price'],'compare_price':p['compare_price'],'badge':p['badge'],'card_color':p['color'],'status':p['status'],'featured':p['featured'],'customizable':p['customizable'],'customization':p['customization'],'colorways':p['colorways'],'media':p.get('media',[]),'category':p['category'],'product_type':p['type'],'image':p['image'],'stock':sum(v['stock'] for v in p['variants']),'sort_order':p.get('sort_order',0),'deleted_at':p.get('deleted_at')} for p in PRODUCTS]
    breakdown=[]
    for order in ORDERS:
     for item in order['items']:
@@ -151,7 +153,17 @@ class Handler(BaseHTTPRequestHandler):
    payload=file.read_bytes();self.send_response(200);self.send_header('Content-Type',mimetypes.guess_type(file)[0] or 'application/octet-stream');self.send_header('Content-Length',len(payload));self.end_headers();return self.wfile.write(payload)
   self.send_error(404)
  def do_POST(self):
-  path=urlparse(self.path).path;body=self.body()
+  path=urlparse(self.path).path
+  if path.startswith('/api/admin/products/') and path.endswith('/media/upload'):
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   pid=path.split('/')[4];product=next((p for p in PRODUCTS if p['id']==pid),None)
+   if not product:return self.json_out({'error':'Product not found.'},404)
+   mime=self.headers.get('Content-Type','').split(';')[0];allowed={'image/jpeg':'image','image/png':'image','image/webp':'image','video/mp4':'video','video/webm':'video'}
+   if mime not in allowed:return self.json_out({'error':'Use JPG, PNG, WebP, MP4 or WebM media.'},415)
+   length=int(self.headers.get('Content-Length',0));self.rfile.read(length)
+   mid='media-'+secrets.token_hex(6);item={'id':mid,'url':'/assets/merch-hero.png','type':allowed[mime],'mimeType':mime,'fileSize':length,'poster':None,'alt':self.headers.get('X-Media-Alt',product['name']),'sortOrder':len(product.get('media',[])),'colorwayId':self.headers.get('X-Colorway-Id') or None,'active':True};product.setdefault('media',[]).append(item);return self.json_out({'media':item},201)
+  body=self.body()
   if path.startswith('/api/admin/vendor-batches'):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
@@ -221,6 +233,18 @@ class Handler(BaseHTTPRequestHandler):
    valid=hmac.compare_digest(str(body.get('email','')).lower(),'admin@iitdmerch.local') and hmac.compare_digest(str(body.get('password','')),'IITD@2026!')
    if not valid:return self.json_out({'error':'Invalid administrator credentials.'},401)
    token=secrets.token_hex(24);ADMIN_SESSIONS.add(token);return self.json_out({'email':'admin@iitdmerch.local','role':'Super admin','proof':'demo-admin-proof'},cookie=f'admin_session={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800')
+  if path=='/api/admin/products':
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   name=str(body.get('name','')).strip();slug=re.sub(r'[^a-z0-9]+','-',str(body.get('slug') or name).lower()).strip('-');sizes=[str(x).strip().upper() for x in body.get('sizes',[]) if str(x).strip()];category=next((x for x in CATEGORIES if x['id']==body.get('categoryId')),None);ptype=next((x for x in TYPES if x['id']==body.get('productTypeId')),None)
+   if not name or not slug or not sizes or not category or not ptype:return self.json_out({'error':'Name, category, product type and sizes are required.'},400)
+   pid='product-'+secrets.token_hex(5);color=str(body.get('colorName','Black'));cid='colorway-'+secrets.token_hex(5);price=int(body.get('basePrice',0));prefix=re.sub(r'[^A-Z0-9]+','-',str(body.get('skuPrefix') or name).upper()).strip('-');variants=[{'id':'variant-'+secrets.token_hex(5),'sku':f"{prefix}-{re.sub(r'[^A-Z0-9]+','-',color.upper())}-{size}",'size':size,'color':color,'colorwayId':cid,'price':price,'stock':int(body.get('stock',0)),'active':True} for size in sizes];colorway={'id':cid,'name':color,'slug':re.sub(r'[^a-z0-9]+','-',color.lower()).strip('-'),'swatch':body.get('swatch','#17171d'),'cardColor':body.get('cardColor','#163ea8'),'active':True,'showInCatalog':True,'sortOrder':0,'image':'/assets/merch-hero.png'};product={'id':pid,'name':name,'slug':slug,'category':category['name'],'categorySlug':category['slug'],'category_id':category['id'],'type':ptype['name'],'typeSlug':ptype['slug'],'product_type_id':ptype['id'],'short_description':str(body.get('shortDescription','')),'description':str(body.get('description','')),'price':price,'compare_price':int(body.get('comparePrice',0)),'badge':str(body.get('badge','')),'color':body.get('cardColor','#163ea8'),'image':'/assets/merch-hero.png','featured':bool(body.get('featured')),'customizable':bool(body.get('customizable')),'status':'draft','rating':0,'reviewCount':0,'variants':variants,'colorways':[colorway],'media':[],'customization':None,'sort_order':int(body.get('sortOrder',0)),'deleted_at':None};PRODUCTS.insert(0,product);return self.json_out({'product':product,'colorway':colorway,'variants':variants},201)
+  if path.startswith('/api/admin/products/') and path.endswith('/restore'):
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   pid=path.split('/')[4];product=next((p for p in PRODUCTS if p['id']==pid),None)
+   if not product or product.get('status')!='archived':return self.json_out({'error':'Only an archived product can be restored.'},409)
+   product['status']='draft';product['deleted_at']=None;return self.json_out({'product':product})
   if path=='/api/admin/catalog-structure':
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
@@ -237,11 +261,28 @@ class Handler(BaseHTTPRequestHandler):
    colorway={'id':f"colorway-{pid}-{secrets.token_hex(3)}",'name':name,'slug':slug,'swatch':body.get('swatch','#17171d'),'cardColor':body.get('cardColor',product['color']),'active':body.get('active',True),'showInCatalog':body.get('showInCatalog',True),'sortOrder':body.get('sortOrder',len(product['colorways'])),'image':body.get('image') or product['image']};product['colorways'].append(colorway);return self.json_out({'colorway':colorway},201)
   self.send_error(404)
  def do_DELETE(self):
-  path=urlparse(self.path).path
+  parsed=urlparse(self.path);path=parsed.path;params=parse_qs(parsed.query)
   if path.startswith('/api/account/addresses/'):
    session=self.require_customer()
    if not session:return
    book=ADDRESSES.get(session['user']['phone'],[]);target=path.rsplit('/',1)[1];ADDRESSES[session['user']['phone']]=[x for x in book if x['id']!=target];return self.json_out({'ok':True})
+  if path.startswith('/api/admin/media/'):
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   mid=path.rsplit('/',1)[1]
+   for product in PRODUCTS:
+    before=len(product.get('media',[]));product['media']=[x for x in product.get('media',[]) if x['id']!=mid]
+    if len(product['media'])<before:return self.json_out({'ok':True})
+   return self.json_out({'error':'Media not found.'},404)
+  if path.startswith('/api/admin/products/'):
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   pid=path.rsplit('/',1)[1];product=next((p for p in PRODUCTS if p['id']==pid),None)
+   if not product:return self.json_out({'error':'Product not found.'},404)
+   if params.get('permanent')==['true']:
+    if product['status']!='draft':return self.json_out({'error':'Only a draft product can be permanently deleted.'},409)
+    PRODUCTS.remove(product);return self.json_out({'ok':True,'permanent':True})
+   product['status']='archived';product['deleted_at']='2026-08-20T10:00:00Z';return self.json_out({'ok':True,'permanent':False})
   self.send_error(404)
  def do_PATCH(self):
   path=urlparse(self.path).path;body=self.body()
@@ -275,6 +316,17 @@ class Handler(BaseHTTPRequestHandler):
       if key in body:colorway[key]=body[key]
      return self.json_out({'colorway':colorway})
    return self.json_out({'error':'Colorway not found.'},404)
+  if path.startswith('/api/admin/media/'):
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   mid=path.rsplit('/',1)[1]
+   for product in PRODUCTS:
+    item=next((x for x in product.get('media',[]) if x['id']==mid),None)
+    if item:
+     if 'alt' in body:item['alt']=str(body['alt'])[:180]
+     if 'sortOrder' in body:item['sortOrder']=max(0,int(body['sortOrder']))
+     return self.json_out({'media':item})
+   return self.json_out({'error':'Media not found.'},404)
   if path.startswith('/api/admin/orders/') and path.endswith('/status'):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
@@ -292,7 +344,7 @@ class Handler(BaseHTTPRequestHandler):
    if path.startswith('/api/admin/products/'):
     product=next((p for p in PRODUCTS if p['id']==path.rsplit('/',1)[1]),None)
     if not product:return self.json_out({'error':'Product not found.'},404)
-    mapping={'name':'name','basePrice':'price','comparePrice':'compare_price','badge':'badge','cardColor':'color','status':'status','featured':'featured','customizable':'customizable','image':'image'}
+    mapping={'name':'name','shortDescription':'short_description','description':'description','categoryId':'category_id','productTypeId':'product_type_id','basePrice':'price','comparePrice':'compare_price','badge':'badge','cardColor':'color','status':'status','featured':'featured','customizable':'customizable','sortOrder':'sort_order','image':'image'}
     for source,target in mapping.items():
      if source in body:product[target]=body[source]
     for variant in product['variants']:variant['price']=int(product['price'])
