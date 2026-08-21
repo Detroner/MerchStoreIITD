@@ -210,7 +210,7 @@ class Handler(BaseHTTPRequestHandler):
      surcharge=0
     subtotal+=variant['price']*qty;custom_total+=surcharge*qty;items.append({'variantId':variant['id'],'name':product['name'],'quantity':qty,'unitPrice':variant['price'],'customization':customization,'customizationSurcharge':surcharge})
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
-   shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'payment':{'provider':'Razorpay','mode':'demo','live':False}})
+   shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False}})
   if path=='/api/reviews':
    if not self.require_customer():return
    text=str(body.get('body','')).strip()
