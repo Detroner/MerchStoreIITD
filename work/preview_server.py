@@ -146,7 +146,7 @@ class Handler(BaseHTTPRequestHandler):
      row=next((x for x in breakdown if x['product_name']==item['name'] and x['size']==item['size']),None)
      if row:row['units']+=item['quantity'];row['orders']+=1
      else:breakdown.append({'product_name':item['name'],'color':item['color'],'size':item['size'],'sku':item['sku'],'units':item['quantity'],'orders':1,'customized_units':item['quantity'] if item.get('customization') else 0})
-   return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':COUPONS,'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':'demo','live':False,'database':'PostgreSQL'}})
+   mode=os.environ.get('RAZORPAY_MODE','demo');configured=mode in ['test','live'] and bool(os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'));return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':COUPONS,'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':mode,'configured':configured,'live':configured,'keyId':os.environ.get('RAZORPAY_KEY_ID','') if configured else '','webhookConfigured':bool(os.environ.get('RAZORPAY_WEBHOOK_SECRET')),'database':'PostgreSQL'},'sms':{'provider':os.environ.get('SMS_PROVIDER','demo'),'configured':False}})
   if path.startswith('/assets/'):file=ROOT/'public'/path.lstrip('/')
   else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login'] or path.startswith('/products/') else path.lstrip('/'))
   if file.is_file():
@@ -207,7 +207,7 @@ class Handler(BaseHTTPRequestHandler):
      if not product['customizable']:return self.json_out({'error':f"{product['name']} is not customizable."},400)
      text=str(customization.get('text','')).strip()
      if not text or len(text)>product['customization']['max']:return self.json_out({'error':'The customization text is not valid.'},400)
-     surcharge=product['customization']['surcharge']
+     surcharge=0
     subtotal+=variant['price']*qty;custom_total+=surcharge*qty;items.append({'variantId':variant['id'],'name':product['name'],'quantity':qty,'unitPrice':variant['price'],'customization':customization,'customizationSurcharge':surcharge})
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
    shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'payment':{'provider':'Razorpay','mode':'demo','live':False}})
