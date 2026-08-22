@@ -10,9 +10,14 @@ const mediaMigration=fs.readFileSync(new URL('../migrations/010_product_catalog_
 for(const route of ['/api/admin/orders','/api/admin/orders/summary','/api/admin/orders/matrix','/api/admin/vendor-batches','/api/admin/products/:id/customization','/api/admin/products/:id/colorways','/api/admin/products/:id/media/upload','/api/admin/media/:id','/api/admin/products/:id/restore'])assert.ok(server.includes(route),`Missing ${route}`);
 for(const table of ['product_colorways','vendor_batches','vendor_batch_items','order_status_history'])assert.ok(migration.includes(`CREATE TABLE ${table}`),`Missing ${table}`);
 for(const column of ['media_type','mime_type','file_size','deleted_at'])assert.ok(mediaMigration.includes(column),`Missing ${column}`);
-for(const component of ['StudioOrdersV2','StudioProductsV2','StudioCatalogManager','colorway-selector','vendor-batches/preview'])assert.ok(client.includes(component),`Missing ${component}`);
+for(const component of ['StudioOrdersV2','StudioProductsV2','StudioCatalogManager','colorway-selector','PRODUCT COLOURS','showColorwayForm','vendor-batches/preview'])assert.ok(client.includes(component),`Missing ${component}`);
 for(const selector of ['.orders-workspace','.orders-filterbar','.matrix-card','.colorway-layout','.media-manager','.product-create','@media(max-width:760px)'])assert.ok(styles.includes(selector),`Missing ${selector}`);
 assert.ok(client.includes('product.catalogItemId||product.id'),'Catalogue cards need stable colorway keys');
 assert.ok(server.includes("vbi.id IS NULL AND o.payment_status IN('paid','captured')"),'New-vendor eligibility must require payment');
 assert.ok(server.includes("'/home/data/product-media'"),'Azure App Service media must use persistent storage');
+assert.ok(server.includes("pco.product_id=p.id AND pco.enabled"),'Customizable filter must require enabled rules');
+assert.ok(server.includes("order_items SET delivered_at=COALESCE(delivered_at,now())"),'Delivered orders must unlock review eligibility');
+assert.ok(server.includes('colorway_id IS NOT DISTINCT FROM v.colorway_id'),'Quote images must follow the selected colorway');
+assert.ok(client.includes('add({...product,image:activeImage}'),'Cart must retain the selected colorway image');
+assert.ok(client.includes('product.customization?.enabled?product.customization:null'),'Disabled customization must be hidden from customers');
 console.log('source self-test passed');
