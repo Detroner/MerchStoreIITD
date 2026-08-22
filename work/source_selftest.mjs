@@ -56,4 +56,6 @@ assert.ok(styles.includes('.desktop-filters label{gap:9px;font-size:11px'),'Desk
 assert.ok(client.includes('useEffect(()=>{if(!initiallyOpen&&addresses.length)setOpen(false)},[addresses.length,initiallyOpen])'),'Address composer must collapse when saved addresses load');
 assert.ok(client.includes('const [open,setOpen]=useState(initiallyOpen||!addresses.length)'),'Address composer must open by default only when no addresses are saved');
 assert.ok(client.includes("{open&&<form className=\"address-form\""),'Address form must remain conditional on the composer state');
+assert.ok(styles.includes('.back-to-store{padding:17px 19px;font-size:13px'),'Go To Merchandise control must be larger');
+assert.ok(styles.includes('.order-summary>button{padding:19px 20px;font:700 13px'),'Place order control must be larger');
 console.log('source self-test passed');

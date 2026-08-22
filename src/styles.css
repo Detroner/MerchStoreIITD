@@ -151,3 +151,8 @@
   .desktop-filters select{min-width:205px;min-height:52px;padding:14px 16px;font-size:15px}
   .desktop-filters .check{font-size:12px}
 }
+
+/* Cart action readability refinement. */
+.back-to-store{padding:17px 19px;font-size:13px;letter-spacing:1.1px}
+.order-summary>button{padding:19px 20px;font:700 13px 'Space Grotesk';letter-spacing:.4px}
+@media(max-width:760px){.back-to-store{padding:15px 16px;font-size:11px}.order-summary>button{padding:17px 18px;font-size:12px}}
