@@ -147,7 +147,7 @@ app.patch('/api/admin/settings',requireAdmin,async(req,res,next)=>{try{const all
 app.use('/assets',express.static(path.join(root,'public','assets'),{maxAge:'1d'}));app.use('/media',express.static(mediaRoot,{maxAge:'1h',fallthrough:false}));
 app.use('/src',express.static(path.join(root,'src'),{maxAge:'5m'}));
 app.get(['/', '/studio', '/studio/', '/cart', '/account', '/login', '/products/:slug'],(req,res)=>res.sendFile(path.join(root,'index.html')));
-app.use((error,req,res,next)=>{if(error?.type==='entity.parse.failed'||(error instanceof SyntaxError&&error.status===400))return res.status(400).json({error:'Request body must be valid JSON.'});console.error(JSON.stringify({message:error.message,route:req.path,requestId:req.headers['x-request-id']||null}));res.status(500).json({error:'The server could not complete that request.'})});
+app.use((error,req,res,next)=>{if(error?.type==='entity.parse.failed'||(error instanceof SyntaxError&&error.status===400))return res.status(400).json({error:'Request body must be valid JSON.'});const status=Number(error?.statusCode||error?.status);if(Number.isInteger(status)&&status>=400&&status<500)return res.status(status).json({error:status===404?'Not found.':'The request could not be completed.'});console.error(JSON.stringify({message:error.message,route:req.path,requestId:req.headers['x-request-id']||null}));res.status(500).json({error:'The server could not complete that request.'})});
 const port=Number(process.env.PORT||4173);
 const server=app.listen(port,()=>console.log(`The IIT Delhi Drop is ready at http://localhost:${port}`));
 const shutdown=async()=>{server.close();await pool.end();process.exit(0)};
