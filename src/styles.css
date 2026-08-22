@@ -60,3 +60,62 @@
 /* Studio colourway management */
 .colorway-manager{margin-top:18px}.colorway-manager>header>button{display:flex;align-items:center;gap:8px;border:1px solid var(--ink);background:var(--accent);padding:11px 13px;font:700 8px 'Space Grotesk';letter-spacing:.7px;white-space:nowrap}.colorway-manager .colorway-layout{align-items:start}.colorway-list{display:grid;gap:12px}.colorway-row{display:grid;grid-template-columns:minmax(150px,.7fr) 1fr;gap:14px;border:1px solid #d6d1c8;background:#faf9f5;padding:12px}.colorway-preview{min-height:180px}.colorway-preview img{}.colorway-row-copy{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:5px 0}.colorway-row-copy>b{font:700 18px 'Space Grotesk';text-transform:uppercase}.colorway-row-copy>small{color:#6d6a63;font-size:10px;line-height:1.45}.colorway-row-copy>button{margin-top:auto;display:flex;align-items:center;gap:7px;border:1px solid var(--ink);background:#fff;padding:10px 11px;font:700 8px 'Space Grotesk';letter-spacing:.5px}.colorway-guide{border-left:4px solid var(--accent);background:var(--surface-muted);padding:16px}.colorway-guide>span{font:700 8px 'Space Grotesk';letter-spacing:1px;color:var(--primary)}.colorway-guide>b{display:block;font:700 13px 'Space Grotesk';margin-top:16px}.colorway-guide>p{font-size:10px;line-height:1.45;color:#6d6a63;margin:4px 0 0}.colorway-create footer{align-items:start}.store[data-theme="dark"] .colorway-row,.store[data-theme="dark"] .colorway-row-copy>button{background:var(--surface);color:var(--ink);border-color:var(--border)}.store[data-theme="dark"] .colorway-guide{background:var(--surface-muted)}.store[data-theme="dark"] .colorway-row-copy>small,.store[data-theme="dark"] .colorway-guide>p{color:var(--muted-ink)}
 @media(max-width:760px){.colorway-manager>header{display:block}.colorway-manager>header>button{margin-top:14px}.colorway-row{grid-template-columns:1fr}.colorway-preview{min-height:230px}.colorway-row-copy>button{width:100%;justify-content:space-between}.colorway-guide{display:none}}
+
+/* Refinement release: card interaction, hierarchy, and checkout readability. */
+.catalog-card{background:var(--surface-raised);border-radius:20px;overflow:hidden}
+.catalog-art{height:440px;border-radius:20px 20px 0 0}
+.catalog-color-dots{margin:12px 12px 0;gap:8px}
+.catalog-color-dots button{border:0;background:transparent;padding:2px;display:grid;place-items:center;border-radius:50%;cursor:pointer}
+.catalog-color-dots button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.catalog-color-dots button.active i{transform:scale(1.15);box-shadow:0 0 0 2px var(--accent),1px 1px 0 var(--ink)}
+.catalog-color-dots i{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--ink);box-shadow:1px 1px 0 var(--ink);display:block;transition:transform .18s,box-shadow .18s}
+.catalog-info{padding:12px 12px 18px}
+.rating{font-size:18px;letter-spacing:1.5px}
+.rating b{font-size:10px;margin-left:6px}
+.title-rating b{font-size:30px;letter-spacing:3px}
+.review-score span{font-size:32px;letter-spacing:4px}
+.review-list article>div b{font-size:27px;letter-spacing:3px}
+.coming-soon-art{height:440px;min-height:260px;background:var(--accent);border:1.5px solid var(--ink);border-radius:20px;display:grid;place-items:center;text-align:center;padding:28px;box-shadow:7px 7px 0 var(--ink)}
+.coming-soon-art strong{font:700 clamp(32px,4vw,54px)/.86 'Space Grotesk';letter-spacing:-.06em}
+.coming-soon-art em{font-style:normal;color:var(--primary)}
+.cart-address-panel{padding:30px;margin:32px 0 26px;border-radius:18px}
+.cart-address-panel>header{gap:24px;padding-bottom:22px}
+.cart-address-panel h2{font-size:34px;margin:10px 0}
+.cart-address-panel p{font-size:15px;line-height:1.6;max-width:620px}
+.saved-addresses{gap:14px;margin-top:22px}
+.saved-address{gap:14px;padding:18px;min-height:122px;border-radius:12px}
+.saved-address input{transform:scale(1.15)}
+.saved-address b{font-size:18px;margin-right:9px}
+.saved-address em{font-size:9px;padding:5px 6px}
+.saved-address small{font-size:14px;line-height:1.55;margin-top:12px}
+.address-form{gap:18px;margin-top:22px;padding-top:24px}
+.address-form>label,.address-form .two-fields>label{font-size:10px}
+.address-form input,.address-form select{padding:14px;margin-top:8px;font-size:15px}
+.address-form button{padding:17px 19px;font-size:11px}
+.coupon-entry{margin:24px 0 10px;padding-top:20px;border-top:1px solid #ffffff55}
+.coupon-entry label{display:grid;gap:10px;font-size:10px;letter-spacing:1px}
+.coupon-entry input{display:block;width:100%;padding:13px 14px;margin-top:2px;font-size:14px;letter-spacing:.4px}
+.coupon-entry small{display:block;margin-top:2px;font:500 11px/1.45 'DM Sans';letter-spacing:0}
+@media(max-width:760px){
+  .catalog-card{border-radius:20px}
+  .catalog-art{height:64vw;max-height:330px;border-radius:20px 20px 0 0}
+  .catalog-info{padding:12px 12px 18px}
+  .catalog-color-dots{margin:12px 12px 0}
+  .rating{font-size:15px}
+  .title-rating b{font-size:30px}
+  .review-score span{font-size:30px}
+  .review-list article>div b{font-size:24px}
+  .coming-soon-art{height:64vw;min-height:220px;padding:18px}
+  .cart-address-panel{padding:22px;margin-top:22px}
+  .cart-address-panel h2{font-size:28px}
+  .cart-address-panel p{font-size:14px}
+  .saved-address{padding:16px;min-height:112px}
+  .saved-address b{font-size:17px}
+  .saved-address small{font-size:13px}
+  .address-form{gap:16px;padding-top:20px}
+  .address-form>label,.address-form .two-fields>label{font-size:9px}
+  .address-form input,.address-form select{padding:13px;font-size:14px}
+  .address-form button{padding:15px 16px;font-size:10px}
+  .coupon-entry{margin-top:22px;padding-top:18px}
+  .coupon-entry input{font-size:14px;padding:13px}
+}
