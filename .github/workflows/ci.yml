@@ -109,8 +109,11 @@ jobs:
 
       - name: Package application
         run: |
+          # Zip deploy does not reliably run the Node build step on this App Service.
+          # Include the production dependency tree so node server.mjs can start after a clean deploy.
+          npm ci --omit=dev
           zip -qr /tmp/merchstore-iitd-${GITHUB_SHA}.zip . \
-            -x '.git/*' 'node_modules/*' '.github/*' 'tools/*' '*.log'
+            -x '.git/*' '.github/*' 'tools/*' '*.log'
 
       - name: Deploy application package to App Service
         run: |
