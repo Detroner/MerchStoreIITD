@@ -75,9 +75,6 @@
 .title-rating b{font-size:30px;letter-spacing:3px}
 .review-score span{font-size:32px;letter-spacing:4px}
 .review-list article>div b{font-size:27px;letter-spacing:3px}
-.coming-soon-art{height:440px;min-height:260px;background:var(--accent);border:1.5px solid var(--ink);border-radius:20px;display:grid;place-items:center;text-align:center;padding:28px;box-shadow:7px 7px 0 var(--ink)}
-.coming-soon-art strong{font:700 clamp(32px,4vw,54px)/.86 'Space Grotesk';letter-spacing:-.06em}
-.coming-soon-art em{font-style:normal;color:var(--primary)}
 .cart-address-panel{padding:30px;margin:32px 0 26px;border-radius:18px}
 .cart-address-panel>header{gap:24px;padding-bottom:22px}
 .cart-address-panel h2{font-size:34px;margin:10px 0}
@@ -105,7 +102,6 @@
   .title-rating b{font-size:30px}
   .review-score span{font-size:30px}
   .review-list article>div b{font-size:24px}
-  .coming-soon-art{height:64vw;min-height:220px;padding:18px}
   .cart-address-panel{padding:22px;margin-top:22px}
   .cart-address-panel h2{font-size:28px}
   .cart-address-panel p{font-size:14px}
@@ -119,3 +115,9 @@
   .coupon-entry{margin-top:22px;padding-top:18px}
   .coupon-entry input{font-size:14px;padding:13px}
 }
+
+.more-soon{display:flex;align-items:baseline;justify-content:space-between;gap:28px;margin-top:-70px;margin-bottom:100px;padding:34px 0;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
+.more-soon .kicker{color:var(--primary)}
+.more-soon h2{font:700 clamp(42px,6vw,78px)/.84 'Space Grotesk';letter-spacing:-.065em;margin:0;text-align:right}
+.more-soon h2 em{font-style:normal;color:var(--primary)}
+@media(max-width:760px){.more-soon{display:block;margin-top:-35px;margin-bottom:65px;padding:24px 0}.more-soon h2{font-size:52px;text-align:left;margin-top:12px}}

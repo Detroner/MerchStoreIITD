@@ -23,9 +23,12 @@ assert.ok(client.includes("||result.product.colorways?.find(x=>String(x.name).to
 assert.ok(client.includes('catalog-color-dots'),'Catalogue cards must show available colour dots');
 assert.ok(client.includes('aria-pressed={activeColorway?.id===colorway.id}'),'Catalogue colour dots must expose active state');
 assert.ok(client.includes('onClick={event=>selectColor(event,colorway)}'),'Catalogue colour dots must switch the card thumbnail');
-assert.ok(client.includes('MORE SOON'),'Catalogue must include the launch placeholder card');
-assert.ok(client.includes('coming-soon-card'),'Launch placeholder card must be non-product UI');
-assert.ok(styles.includes('.coming-soon-art'),'Launch placeholder card must have dedicated styling');
+assert.ok(client.includes('MORE SOON'),'Storefront must include the More Soon message');
+assert.ok(client.includes('function MoreSoonSection'),'More Soon message must be a standalone section');
+assert.ok(client.includes('<MoreSoonSection/>'),'More Soon section must sit after the catalogue');
+assert.ok(styles.includes('.more-soon'),'More Soon section must have dedicated styling');
+assert.ok(!client.includes('ComingSoonCard'),'Placeholder product card must be removed');
+assert.ok(!styles.includes('.coming-soon-card'),'Placeholder product-card styling must be removed');
 assert.ok(styles.includes('.coupon-entry label{display:grid;gap:10px'),'Coupon label and input need intentional spacing');
 assert.ok(styles.includes('.cart-address-panel h2{font-size:34px'),'Delivery address heading must be larger');
 assert.ok(styles.includes('.catalog-art{height:440px'),'Product card media must be larger');
