@@ -122,7 +122,9 @@ jobs:
             --name "$AZURE_WEBAPP_NAME" \
             --src-path "/tmp/merchstore-iitd-${GITHUB_SHA}.zip" \
             --type zip \
-            --async true \
+            --async false \
+            --timeout 900000 \
+            --track-status true \
             --subscription "$AZURE_SUBSCRIPTION_ID"
 
       - name: Restart App Service
