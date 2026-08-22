@@ -48,4 +48,6 @@ assert.ok(client.includes("new URLSearchParams(location.search).get('tab')"),'Ac
 assert.ok(styles.includes('.account-menu-wrap:hover .account-menu,.account-menu-wrap:focus-within .account-menu'),'Account menu must open on hover and keyboard focus');
 assert.ok(styles.includes('.account-profile-editor>.kicker{font-size:13px'),'Profile Details label must be larger');
 assert.ok(styles.includes('.account-profile-editor p{font-size:16px'),'Profile details copy must be larger');
+assert.ok(styles.includes('.story>div:nth-child(2)>a{gap:20px;margin-top:30px;font-size:16px'),'Find Your Piece link must be larger');
+assert.ok(styles.includes('.story>div:nth-child(2)>a svg{width:26px;height:26px'),'Find Your Piece arrow must be larger');
 console.log('source self-test passed');
