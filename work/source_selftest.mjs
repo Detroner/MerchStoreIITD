@@ -38,4 +38,5 @@ assert.ok(!client.includes('Customizable only'),'Storefront customizability filt
 assert.ok(!client.includes('<a href="/studio">STUDIO</a>'),'Public footer must not link to Studio');
 assert.ok(client.includes('ADD TO BAG · ${money'),'Mobile Add to Bag must include the dynamic price');
 assert.ok(client.includes('product.customization?.enabled?product.customization:null'),'Disabled customization must be hidden from customers');
+assert.ok(client.includes('item.qty<=1?remove(item.key):update(item.key,item.qty-1)'),'Cart minus at quantity one must remove the item');
 console.log('source self-test passed');
