@@ -121,3 +121,20 @@
 .more-soon h2{font:700 clamp(42px,6vw,78px)/.84 'Space Grotesk';letter-spacing:-.065em;margin:0;text-align:right}
 .more-soon h2 em{font-style:normal;color:var(--primary)}
 @media(max-width:760px){.more-soon{display:block;margin-top:-35px;margin-bottom:65px;padding:24px 0}.more-soon h2{font-size:52px;text-align:left;margin-top:12px}}
+
+/* Signed-in account menu and profile readability refinement. */
+.account-menu-wrap{position:relative;display:flex;align-items:center;z-index:35}
+.account-trigger{display:flex;align-items:center;gap:7px;border:0;background:transparent;color:var(--ink);padding:6px 0;font:inherit;cursor:pointer}
+.account-trigger svg{width:19px;height:19px}
+.account-menu{position:absolute;right:0;top:calc(100% + 9px);min-width:170px;padding:8px;background:var(--surface-raised);border:1px solid var(--border);box-shadow:4px 4px 0 var(--ink);opacity:0;visibility:hidden;transform:translateY(-7px);pointer-events:none;transition:opacity .16s ease,transform .16s ease,visibility .16s ease}
+.account-menu-wrap:hover .account-menu,.account-menu-wrap:focus-within .account-menu,.account-menu.show{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
+.account-menu a{display:block!important;padding:11px 12px;color:var(--ink)!important;text-decoration:none;font:700 10px 'Space Grotesk';letter-spacing:1px;white-space:nowrap}
+.account-menu a:hover,.account-menu a:focus-visible{background:var(--accent);outline:0}
+.account-profile-editor{padding:34px;gap:18px}
+.account-profile-editor>.kicker{font-size:13px;letter-spacing:2px}
+.account-profile-editor h2{font-size:36px}
+.account-profile-editor p{font-size:16px;line-height:1.65}
+.account-profile-editor label{font-size:10px}
+.account-profile-editor input,.account-profile-editor select{padding:14px;margin-top:8px;font-size:15px}
+.account-profile-editor button{padding:17px 19px;font-size:11px}
+@media(max-width:760px){.account-menu{right:-55px;min-width:160px}.account-profile-editor{padding:22px;gap:16px}.account-profile-editor>.kicker{font-size:11px}.account-profile-editor h2{font-size:30px}.account-profile-editor p{font-size:14px}.account-profile-editor label{font-size:9px}.account-profile-editor input,.account-profile-editor select{padding:13px;font-size:14px}.account-profile-editor button{padding:15px 16px;font-size:10px}}
