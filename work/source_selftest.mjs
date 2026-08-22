@@ -39,4 +39,7 @@ assert.ok(!client.includes('<a href="/studio">STUDIO</a>'),'Public footer must n
 assert.ok(client.includes('ADD TO BAG · ${money'),'Mobile Add to Bag must include the dynamic price');
 assert.ok(client.includes('product.customization?.enabled?product.customization:null'),'Disabled customization must be hidden from customers');
 assert.ok(client.includes('item.qty<=1?remove(item.key):update(item.key,item.qty-1)'),'Cart minus at quantity one must remove the item');
+assert.ok(client.includes("localStorage.removeItem('iitd-drop-cart-v2')"),'Confirmed orders must clear persisted cart storage synchronously');
+assert.ok(client.includes("const finishOrder=result=>{clear();setBusy(false);location.href='/account'}"),'Confirmed orders must redirect to the customer orders page');
+assert.ok(client.includes('return {cart,add,update,remove,clear,count:'),'Cart hook must expose its clear operation');
 console.log('source self-test passed');
