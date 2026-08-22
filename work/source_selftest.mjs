@@ -53,4 +53,7 @@ assert.ok(styles.includes('.story>div:nth-child(2)>a svg{width:26px;height:26px'
 assert.ok(styles.includes('@media(min-width:761px)'),'Desktop filter sizing must not override mobile filters');
 assert.ok(styles.includes('.desktop-filters select{min-width:205px;min-height:52px;padding:14px 16px;font-size:15px}'),'Desktop filter boxes must be larger');
 assert.ok(styles.includes('.desktop-filters label{gap:9px;font-size:11px'),'Desktop filter labels must be larger');
+assert.ok(client.includes('useEffect(()=>{if(!initiallyOpen&&addresses.length)setOpen(false)},[addresses.length,initiallyOpen])'),'Address composer must collapse when saved addresses load');
+assert.ok(client.includes('const [open,setOpen]=useState(initiallyOpen||!addresses.length)'),'Address composer must open by default only when no addresses are saved');
+assert.ok(client.includes("{open&&<form className=\"address-form\""),'Address form must remain conditional on the composer state');
 console.log('source self-test passed');
