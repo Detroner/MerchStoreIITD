@@ -19,5 +19,11 @@ assert.ok(server.includes("pco.product_id=p.id AND pco.enabled"),'Customizable f
 assert.ok(server.includes("order_items SET delivered_at=COALESCE(delivered_at,now())"),'Delivered orders must unlock review eligibility');
 assert.ok(server.includes('colorway_id IS NOT DISTINCT FROM v.colorway_id'),'Quote images must follow the selected colorway');
 assert.ok(client.includes('add({...product,image:activeImage}'),'Cart must retain the selected colorway image');
+assert.ok(client.includes("||result.product.colorways?.find(x=>String(x.name).toLowerCase()==='beige')"),'Product detail must default to Beige');
+assert.ok(client.includes('catalog-color-dots'),'Catalogue cards must show available colour dots');
+assert.ok(client.includes('Array.from({length:4}'),'Announcement marquees must repeat infinitely');
+assert.ok(!client.includes('Customizable only'),'Storefront customizability filter must be removed');
+assert.ok(!client.includes('<a href="/studio">STUDIO</a>'),'Public footer must not link to Studio');
+assert.ok(client.includes('ADD TO BAG · ${money'),'Mobile Add to Bag must include the dynamic price');
 assert.ok(client.includes('product.customization?.enabled?product.customization:null'),'Disabled customization must be hidden from customers');
 console.log('source self-test passed');
