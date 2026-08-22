@@ -50,4 +50,7 @@ assert.ok(styles.includes('.account-profile-editor>.kicker{font-size:13px'),'Pro
 assert.ok(styles.includes('.account-profile-editor p{font-size:16px'),'Profile details copy must be larger');
 assert.ok(styles.includes('.story>div:nth-child(2)>a{gap:20px;margin-top:30px;font-size:16px'),'Find Your Piece link must be larger');
 assert.ok(styles.includes('.story>div:nth-child(2)>a svg{width:26px;height:26px'),'Find Your Piece arrow must be larger');
+assert.ok(styles.includes('@media(min-width:761px)'),'Desktop filter sizing must not override mobile filters');
+assert.ok(styles.includes('.desktop-filters select{min-width:205px;min-height:52px;padding:14px 16px;font-size:15px}'),'Desktop filter boxes must be larger');
+assert.ok(styles.includes('.desktop-filters label{gap:9px;font-size:11px'),'Desktop filter labels must be larger');
 console.log('source self-test passed');
