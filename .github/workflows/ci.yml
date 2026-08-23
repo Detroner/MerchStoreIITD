@@ -47,12 +47,15 @@ jobs:
           test -s migrations/007_address_capture.sql
           test -s migrations/008_theme_modes.sql
           test -s migrations/009_provider_integrations.sql
+          test -s migrations/011_dark_theme_visual_tokens.sql
           grep -q "wallet_accounts" migrations/004_wallet_loyalty.sql
           grep -q "wallet_reward_percent" migrations/004_wallet_loyalty.sql
           grep -q "storyHero" migrations/006_story_reviews_and_placements.sql
           grep -q "line_2" migrations/007_address_capture.sql
           grep -q "darkBackground" migrations/008_theme_modes.sql
           grep -q "provider" migrations/009_provider_integrations.sql
+          grep -q "darkStoryCopy" migrations/011_dark_theme_visual_tokens.sql
+          grep -q "darkKineticBackground" migrations/011_dark_theme_visual_tokens.sql
 
   deploy:
     name: Migrate and deploy to Azure

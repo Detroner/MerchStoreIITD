@@ -60,6 +60,10 @@ assert.ok(!client.includes('className={\'filter-backdrop \''),'Public filter bac
 assert.ok(!client.includes('className={\'filter-sheet \''),'Public filter sheet must be removed');
 assert.ok(styles.includes('.desktop-filters,.mobile-filter,.filter-backdrop,.filter-sheet{display:none!important}'),'Obsolete filter controls must stay suppressed');
 assert.ok(styles.includes('@media(max-width:760px){.more-soon{display:block!important;visibility:visible;opacity:1'),'More Soon must remain visible on mobile');
+assert.ok(client.includes("['darkStoryCopy','Story text'")&&client.includes("['darkKineticBackground','Ticker background'"),'Studio must expose seven independently editable dark-mode colours');
+assert.ok(client.includes("'--story-copy':dark?(s.darkStoryCopy")&&client.includes("'--kinetic-background':dark?(s.darkKineticBackground"),'Dark story text and kinetic background must use separate tokens');
+assert.ok(styles.includes('.kinetic-line{height:75px;background:var(--kinetic-background)'),'Kinetic carousel must use its independent background token');
+assert.ok(server.includes('darkStoryCopy')&&server.includes('darkKineticBackground'),'Admin settings API must accept the independent dark-mode tokens');
 assert.ok(!index.toLowerCase().includes(blockedTerm),'Public document title must not contain the blocked term');
 assert.ok(!seed.toLowerCase().includes(blockedTerm),'Seeded public settings must not contain the blocked term');
 assert.ok(!preview.toLowerCase().includes(blockedTerm),'Local preview settings must not contain the blocked term');
