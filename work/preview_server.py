@@ -1,4 +1,5 @@
 import json, secrets, hmac, hashlib, mimetypes, re
+import os
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
