@@ -124,6 +124,6 @@ Store these values as Azure Key Vault secrets and reference them from App Servic
 - Shipping aggregator or courier workflow
 - Hosted observability and alerting
 
-MotionSites.ai informed the creative direction; Anime.js provides the local runtime motion. The concept artwork does not use an official institutional seal. Obtain IIT Delhi branding and merchandise approvals before launch.
+MotionSites.ai informed the creative direction; Anime.js provides the local runtime motion. The concept artwork does not use an institutional seal. Obtain IIT Delhi branding and merchandise approvals before launch.
 
 The full implementation and launch sequence is in `outputs/postgresql-commerce-evolution-pipeline.md`.

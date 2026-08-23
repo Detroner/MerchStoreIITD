@@ -48,7 +48,7 @@ fi
 if ! need_cmd docker || ! need_cmd docker-compose; then
   info "Docker or docker compose not found. Attempting to install..."
   if [ "$PKG" = "apt" ]; then
-    info "Installing Docker via official script..."
+    info "Installing Docker via the recommended script..."
     curl -fsSL https://get.docker.com | $SUDO sh
     # ensure docker-compose plugin exists (Docker 20.10+ includes compose as plugin, else user can install compose separately)
   elif [ "$PKG" = "brew" ]; then

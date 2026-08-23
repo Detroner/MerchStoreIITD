@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
+const blockedTerm=['off','icial'].join('');
 const server=fs.readFileSync(new URL('../server.mjs',import.meta.url),'utf8');
 const client=fs.readFileSync(new URL('../src/main.jsx',import.meta.url),'utf8');
 const styles=fs.readFileSync(new URL('../src/styles.css',import.meta.url),'utf8');
+const index=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const seed=fs.readFileSync(new URL('../migrations/002_seed_catalogue.sql',import.meta.url),'utf8');
+const preview=fs.readFileSync(new URL('../work/preview_server.py',import.meta.url),'utf8');
 const migration=fs.readFileSync(new URL('../migrations/004_order_operations_colorways.sql',import.meta.url),'utf8');
 const mediaMigration=fs.readFileSync(new URL('../migrations/010_product_catalog_management.sql',import.meta.url),'utf8');
 
@@ -53,6 +57,11 @@ assert.ok(styles.includes('.story>div:nth-child(2)>a svg{width:26px;height:26px'
 assert.ok(styles.includes('@media(min-width:761px)'),'Desktop filter sizing must not override mobile filters');
 assert.ok(styles.includes('.desktop-filters select{min-width:205px;min-height:52px;padding:14px 16px;font-size:15px}'),'Desktop filter boxes must be larger');
 assert.ok(styles.includes('.desktop-filters label{gap:9px;font-size:11px'),'Desktop filter labels must be larger');
+assert.ok(!index.toLowerCase().includes(blockedTerm),'Public document title must not contain the blocked term');
+assert.ok(!seed.toLowerCase().includes(blockedTerm),'Seeded public settings must not contain the blocked term');
+assert.ok(!preview.toLowerCase().includes(blockedTerm),'Local preview settings must not contain the blocked term');
+assert.ok(!fs.readFileSync(new URL('../README.md',import.meta.url),'utf8').toLowerCase().includes(blockedTerm),'Tracked project documentation must not contain the blocked term');
+assert.ok(!fs.readFileSync(new URL('../scripts/setup-unix.sh',import.meta.url),'utf8').toLowerCase().includes(blockedTerm),'Tracked setup script must not contain the blocked term');
 assert.ok(client.includes('useEffect(()=>{if(!initiallyOpen&&addresses.length)setOpen(false)},[addresses.length,initiallyOpen])'),'Address composer must collapse when saved addresses load');
 assert.ok(client.includes('const [open,setOpen]=useState(initiallyOpen||!addresses.length)'),'Address composer must open by default only when no addresses are saved');
 assert.ok(client.includes("{open&&<form className=\"address-form\""),'Address form must remain conditional on the composer state');
