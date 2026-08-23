@@ -160,3 +160,5 @@
 /* Filter-free catalogue and mobile More Soon visibility. */
 .desktop-filters,.mobile-filter,.filter-backdrop,.filter-sheet{display:none!important}
 @media(max-width:760px){.more-soon{display:block!important;visibility:visible;opacity:1;position:relative;z-index:2;margin:0 20px 56px;padding:25px 0 32px;overflow:visible}.more-soon h2{display:block!important;visibility:visible;font-size:52px;line-height:.84;margin:12px 0 0}}
+/* Mobile catalogue rhythm refinement: separate the count from cards while tightening the transition to More Soon. */
+@media(max-width:760px){.catalog{padding-bottom:30px}.catalog-count{display:block;margin-top:24px}.more-soon{margin-top:0}}
