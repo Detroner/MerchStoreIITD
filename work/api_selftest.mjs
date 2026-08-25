@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 
 const origin=process.env.PREVIEW_ORIGIN||'http://127.0.0.1:4173';
+const adminEmail=process.env.ADMIN_PREVIEW_EMAIL||'preview-admin@example.invalid';
+const adminPassword=process.env.ADMIN_PREVIEW_PASSWORD;
+if(!adminPassword)throw new Error('Set ADMIN_PREVIEW_PASSWORD for the local preview API self-test.');
 let cookie='';
 let proof='';
 
@@ -12,7 +15,7 @@ async function request(path,{method='GET',body,admin=false,raw=false,headers={}}
   return {response,payload};
 }
 
-const login=await request('/api/admin/login',{method:'POST',body:{email:'admin@iitdmerch.local',password:'IITD@2026!'}});
+const login=await request('/api/admin/login',{method:'POST',body:{email:adminEmail,password:adminPassword}});
 cookie=login.response.headers.get('set-cookie').split(';')[0];
 proof=login.payload.proof;
 assert.ok(cookie&&proof);

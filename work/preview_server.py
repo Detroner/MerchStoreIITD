@@ -5,6 +5,8 @@ from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
 ROOT=Path(__file__).resolve().parents[1]
+PREVIEW_ADMIN_EMAIL=os.environ.get('ADMIN_PREVIEW_EMAIL','preview-admin@example.invalid')
+PREVIEW_ADMIN_PASSWORD=os.environ.get('ADMIN_PREVIEW_PASSWORD','')
 SETTINGS={'brand':'THE IIT DELHI DROP','eyebrow':'CAMPUS GOODS / EST. 2026','headline':'BIG BRAINS.\nBIGGER FITS.','subhead':'Campus-made merchandise for the curious, sleep-deprived and world-changing.','announcement':'FREE SHIPPING ABOVE ₹1,499 ✦ FRESH DROP IS LIVE ✦ MADE FOR CAMPUS','primary':'#ed3b24','secondary':'#163ea8','accent':'#f5ce3e','background':'#f4eddf','ink':'#17171d','radius':'20','motion':'1','motionIntensity':'1','motionPreset':'campus-pop','heroImage':'/assets/merch-hero.png','heroButton':'EXPLORE THE DROP','storyTitle':'Made of red brick & big ideas.','storyBody':'Designed for the people who turn impossible questions into everyday conversations.','footerNote':'Designed on campus. Worn everywhere.'}
 CATEGORIES=[{'id':'cat-apparel','name':'Apparel','slug':'apparel'},{'id':'cat-accessories','name':'Accessories','slug':'accessories'},{'id':'cat-home','name':'Home','slug':'home'},{'id':'cat-stationery','name':'Stationery','slug':'stationery'}]
 TYPES=[{'id':'type-tee','name':'T-shirt','slug':'t-shirt'},{'id':'type-hoodie','name':'Hoodie','slug':'hoodie'},{'id':'type-track','name':'Trackpants','slug':'trackpants'},{'id':'type-cap','name':'Cap','slug':'cap'},{'id':'type-bag','name':'Bag','slug':'bag'},{'id':'type-mug','name':'Mug','slug':'mug'},{'id':'type-stationery','name':'Stationery','slug':'stationery'}]
@@ -73,7 +75,7 @@ class Handler(BaseHTTPRequestHandler):
   return session
  def do_GET(self):
   parsed=urlparse(self.path);path=parsed.path;params={k:v[0] for k,v in parse_qs(parsed.query).items()}
-  if path=='/api/store':return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS})
+  if path=='/api/store':return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True},'sms':{'provider':'demo','configured':False,'demoAllowed':True}})
   if path=='/api/catalog':
    try:
     items=[]
@@ -211,7 +213,7 @@ class Handler(BaseHTTPRequestHandler):
      surcharge=0
     subtotal+=variant['price']*qty;custom_total+=surcharge*qty;items.append({'variantId':variant['id'],'name':product['name'],'quantity':qty,'unitPrice':variant['price'],'customization':customization,'customizationSurcharge':surcharge})
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
-   shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False}})
+   shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True}})
   if path=='/api/reviews':
    if not self.require_customer():return
    text=str(body.get('body','')).strip()
@@ -231,9 +233,9 @@ class Handler(BaseHTTPRequestHandler):
     for item in book:item['is_default']=False
    book.append(address);return self.json_out({'address':address},201)
   if path=='/api/admin/login':
-   valid=hmac.compare_digest(str(body.get('email','')).lower(),'admin@iitdmerch.local') and hmac.compare_digest(str(body.get('password','')),'IITD@2026!')
+   valid=bool(PREVIEW_ADMIN_PASSWORD) and hmac.compare_digest(str(body.get('email','')).lower(),PREVIEW_ADMIN_EMAIL.lower()) and hmac.compare_digest(str(body.get('password','')),PREVIEW_ADMIN_PASSWORD)
    if not valid:return self.json_out({'error':'Invalid administrator credentials.'},401)
-   token=secrets.token_hex(24);ADMIN_SESSIONS.add(token);return self.json_out({'email':'admin@iitdmerch.local','role':'Super admin','proof':'demo-admin-proof'},cookie=f'admin_session={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800')
+   token=secrets.token_hex(24);ADMIN_SESSIONS.add(token);return self.json_out({'email':PREVIEW_ADMIN_EMAIL,'role':'Super admin','proof':'demo-admin-proof'},cookie=f'admin_session={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800')
   if path=='/api/admin/products':
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)

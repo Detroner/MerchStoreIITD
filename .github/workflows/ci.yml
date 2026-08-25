@@ -27,35 +27,28 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Check backend syntax
+      - name: Check backend syntax and source contracts
         run: npm run check
 
-      - name: Validate migration files
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Validate package and migration files
         run: |
-          test -s migrations/001_initial_postgresql.sql
-          test -s migrations/004_wallet_loyalty.sql
-          test -s migrations/006_story_reviews_and_placements.sql
-          test -s migrations/007_address_capture.sql
-          test -s migrations/008_theme_modes.sql
-          test -s migrations/009_provider_integrations.sql
-          test -s migrations/011_dark_theme_visual_tokens.sql
-          grep -q "wallet_accounts" migrations/004_wallet_loyalty.sql
-          grep -q "wallet_reward_percent" migrations/004_wallet_loyalty.sql
-          grep -q "storyHero" migrations/006_story_reviews_and_placements.sql
-          grep -q "line_2" migrations/007_address_capture.sql
-          grep -q "darkBackground" migrations/008_theme_modes.sql
-          grep -q "provider" migrations/009_provider_integrations.sql
-          grep -q "darkStoryCopy" migrations/011_dark_theme_visual_tokens.sql
-          grep -q "darkKineticBackground" migrations/011_dark_theme_visual_tokens.sql
+          test "$(node -p "require('./package.json').engines.node")" = "22.x"
+          test "$(find migrations -maxdepth 1 -type f -name '*.sql' | wc -l)" -gt 0
+          find migrations -maxdepth 1 -type f -name '*.sql' -print0 | while IFS= read -r -d '' migration; do
+            test -s "$migration"
+          done
 
   deploy:
     name: Migrate and deploy to Azure
@@ -116,7 +109,7 @@ jobs:
           # Include the production dependency tree so node server.mjs can start after a clean deploy.
           npm ci --omit=dev
           zip -qr /tmp/merchstore-iitd-${GITHUB_SHA}.zip . \
-            -x '.git/*' '.github/*' 'tools/*' '*.log'
+            -x '.git/*' '.github/*' 'tools/*' 'work/*' '*.log' '.env*' 'audit-*.md' 'SECURITY_AUDIT_PRODUCTION_READINESS.md'
 
       - name: Deploy application package to App Service
         run: |

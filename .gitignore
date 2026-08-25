@@ -2,10 +2,9 @@
 node_modules/
 npm-debug.log
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Environment — never commit runtime secrets
+.env*
+!.env.example
 
 # OS
 .DS_Store

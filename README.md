@@ -6,15 +6,15 @@ A creative, mobile-first merchandise storefront and operations Studio built with
 
 - Responsive storefront with a stable embedded catalogue, size filters, sorting, four-card phone batches and graceful empty/error states.
 - Full product pages with exact size × colour variants, stock, customization preview and production-time disclosure; personalization is included in the product price.
-- Persistent cart with server-authoritative quote validation, non-charging demo checkout and optional Razorpay Standard Checkout when configured.
-- Phone OTP registration and login, affiliation-aware profiles, optional hostel details, durable sessions and a customer loyalty wallet.
+- Persistent cart with server-authoritative quote validation and Razorpay Standard Checkout when configured; production refuses no-charge demo orders.
+- Phone OTP registration and login, affiliation-aware profiles, optional hostel details, durable sessions and a customer loyalty wallet; production refuses demo OTP authentication until MSG91 is configured.
 - Per-product wallet reward percentages controlled from Studio; rewards and redemptions are recorded in an auditable PostgreSQL ledger.
 - Product customization placements are controlled per product from Studio; customers see only the enabled Front, Back or Side choices.
 - Verified-purchase reviews from My Orders, a 400-word limit, up to three image descriptors and Studio moderation. Placeholder ratings and seeded review counts are not shown.
 - PostgreSQL schema for catalogue, variants, inventory, customers, addresses, orders, customization snapshots, coupons, reviews and idempotent payment events.
 - Studio controls for products and photos, themes, motion, coupons, reviews, customers, product/size demand, wallet adjustments, customization placements and the complete Our Story page. Product management includes structured features, multiple photos, explicit thumbnail selection, archiving and safe draft deletion.
 - Argon2 administrator credentials, HttpOnly cookies, CSRF proofs, throttling, security headers and audit records.
-- Razorpay Standard Checkout and MSG91 OTP adapters with demo fallbacks; external providers remain disabled until credentials and merchant onboarding are configured.
+- Razorpay Standard Checkout and MSG91 OTP adapters; external providers remain disabled until credentials and merchant onboarding are configured, and production fails closed rather than exposing demo credentials or creating no-charge orders.
 
 ## Quick visual review (no database required)
 
@@ -32,17 +32,17 @@ Then open:
 - Customer account: `http://localhost:4173/login`
 - Studio: `http://localhost:4173/studio`
 
-Local review credentials:
+Local review credentials must be supplied only to the local process:
 
-- Customer OTP: `202626`
-- Studio email: `admin@iitdmerch.local`
-- Studio password: set `ADMIN_PREVIEW_PASSWORD` in the shell before starting `work/preview_server.py`.
+- Customer OTP: the preview response contains a local-only code.
+- Studio email: set `ADMIN_PREVIEW_EMAIL` (or use the non-production placeholder default).
+- Studio password: set `ADMIN_PREVIEW_PASSWORD` in the shell before starting `work/preview_server.py` and the API self-test.
 
-The preview adapter no longer contains a hardcoded administrator password. These local values must never be used in a shared environment.
+The preview adapter contains no administrator password or live identity. These local values must never be used in a shared environment.
 
 ## Production setup with PostgreSQL
 
-1. Install Node.js 20+ and PostgreSQL 16+.
+1. Install Node.js 22.x and PostgreSQL 16+.
 2. Copy `.env.example` to `.env` and replace every secret.
 3. Install packages with `npm install` (this creates a fresh lockfile for your platform).
 4. Create the database, then run `npm run db:migrate`.
@@ -107,13 +107,30 @@ For the exact manual commands, read `azure-manual-deployment-guide.md`. To inspe
 
 ## Payment and messaging configuration
 
-The application is safe to run without purchasing either service. With the default `RAZORPAY_MODE=demo` and `SMS_PROVIDER=demo`, checkout remains non-charging and OTP verification uses the configured demo code. The provider adapters activate only when their credentials are present.
+The public catalogue is safe to run without purchasing either service. In production, `RAZORPAY_MODE=demo` and `SMS_PROVIDER=demo` are fail-closed: customers can browse, view products and build a bag, but the server refuses demo OTP challenges and no-charge demo orders. The local preview adapter remains intentionally demo-enabled for visual review only.
 
 For Razorpay, first use test credentials: set `RAZORPAY_MODE=test`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET`. The server creates the Razorpay order, the browser opens Standard Checkout, the server verifies the `razorpay_order_id|razorpay_payment_id` signature, and the webhook endpoint deduplicates events before settling the order. Switch to `RAZORPAY_MODE=live` only after merchant onboarding, test payments, failed/duplicate callback tests, reconciliation and a controlled live penny test. Never mark an order paid from a browser redirect alone.
 
-For MSG91, create an OTP template and set `SMS_PROVIDER=msg91`, `MSG91_AUTHKEY`, and `MSG91_TEMPLATE_ID`. The server calls MSG91 to send and verify the OTP; no local OTP is exposed in the response when MSG91 is active. If these values are absent, the app refuses to claim MSG91 is active and stays in demo mode.
+For MSG91, create and approve an OTP template, then set `SMS_PROVIDER=msg91`, `MSG91_AUTHKEY`, and `MSG91_TEMPLATE_ID`. The server calls MSG91 to send and verify the OTP; no local OTP is exposed in the response when MSG91 is active. If these values are absent, production sign-in is unavailable rather than falling back to a browser-visible code.
 
 Store these values as Azure Key Vault secrets and reference them from App Service settings. Do not commit them to `.env`, the repository, client-side code or browser-visible responses.
+
+## Production launch posture
+
+The Azure site is currently suitable as a public catalogue/showcase: the storefront, product pages, product media, cart quoting and health endpoint are live. Customer sign-in and checkout intentionally remain unavailable until their real providers are configured and tested. The production Studio console is also paused by default; the form no longer ships with credential defaults, and the existing shared administrator credential must be rotated before the console is explicitly enabled and treated as trusted.
+
+| Area | Current state | Required before accepting real customers or money |
+|---|---|---|
+| Catalogue and product experience | Live and browser-verified | Keep product, inventory and media content reviewed |
+| Customer authentication | Production demo OTP rejected; MSG91 not configured | Configure MSG91 in Key Vault, verify send/verify/expiry/rate limits, then test account creation and returning-user login |
+| Payments | Production demo checkout rejected; Razorpay not configured | Configure Razorpay test keys and webhook, test success/failure/duplicate callbacks and reconciliation, then switch to live only after merchant onboarding and a controlled live test |
+| Admin Studio | No client-side default credentials; shared password/HMAC session remains a risk | Rotate the compromised administrator credential, enable a separate identity with MFA and add revocation/least-privilege controls before operations |
+| Data and network controls | PostgreSQL and Key Vault are reachable through public endpoints | Prefer private endpoints/restricted firewall rules, Key Vault RBAC and purge protection, database TLS CA validation, backups/restore testing and a dedicated least-privilege application role |
+| Delivery controls | GitHub Actions deploys through OIDC and runs migrations | Protect `main`, require production environment approval, narrow the Azure identity scope and keep runner firewall cleanup monitored |
+| Browser supply chain | Current raw JSX/Babel/CDN architecture works but is not a strict CSP/SRI posture | Introduce a build/bundle pipeline, pin assets with integrity metadata, then enforce a tested Content Security Policy |
+| Business readiness | No live-money release yet | Add custom domain, privacy/terms, shipping/returns/refund policy, support contact, fulfilment/reconciliation workflow and monitoring alerts |
+
+Never enable a provider by placing credentials in browser code or chat. Add them as Key Vault secrets, set the corresponding App Service settings, restart the App Service if required, verify `/api/store` reports the intended readiness without exposing values, and run the provider-specific test checklist before enabling live traffic.
 
 ## External adapters still required
 

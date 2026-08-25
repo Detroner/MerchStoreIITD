@@ -8,6 +8,8 @@ const styles=fs.readFileSync(new URL('../src/styles.css',import.meta.url),'utf8'
 const index=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const seed=fs.readFileSync(new URL('../migrations/002_seed_catalogue.sql',import.meta.url),'utf8');
 const preview=fs.readFileSync(new URL('../work/preview_server.py',import.meta.url),'utf8');
+const workflow=fs.readFileSync(new URL('../.github/workflows/ci.yml',import.meta.url),'utf8');
+const packageJson=JSON.parse(fs.readFileSync(new URL('../package.json',import.meta.url),'utf8'));
 const migration=fs.readFileSync(new URL('../migrations/004_order_operations_colorways.sql',import.meta.url),'utf8');
 const mediaMigration=fs.readFileSync(new URL('../migrations/010_product_catalog_management.sql',import.meta.url),'utf8');
 
@@ -74,4 +76,20 @@ assert.ok(client.includes('const [open,setOpen]=useState(initiallyOpen||!address
 assert.ok(client.includes("{open&&<form className=\"address-form\""),'Address form must remain conditional on the composer state');
 assert.ok(styles.includes('.back-to-store{padding:17px 19px;font-size:13px'),'Go To Merchandise control must be larger');
 assert.ok(styles.includes('.order-summary>button{padding:19px 20px;font:700 13px'),'Place order control must be larger');
+assert.ok(!client.includes("setEmail('admin@"),'Studio must not ship a prefilled administrator email');
+assert.ok(!client.includes("setPassword('"),'Studio must not ship a prefilled administrator password');
+assert.ok(client.includes('checkoutReady=Boolean(store.payment?.live||store.payment?.demoAllowed)'),'Checkout UI must expose only live or explicitly non-production demo checkout');
+assert.ok(client.includes('loginReady=Boolean(store.sms?.configured||store.sms?.demoAllowed)'),'Login UI must expose only configured SMS or explicitly non-production demo SMS');
+assert.ok(client.includes('CHECKOUT UNAVAILABLE'),'Production checkout must fail closed in the customer UI');
+assert.ok(client.includes('SIGN-IN NOT CONFIGURED'),'Production sign-in must fail closed in the customer UI');
+assert.ok(client.includes('htmlFor="studio-email"')&&client.includes('autoComplete="current-password"'),'Studio credentials must have accessible labels and autofill semantics');
+assert.ok(server.includes("const demoAllowed=()=>!production")&&server.includes("provider==='demo'&&!demoAllowed()"),'Production demo OTP must be rejected');
+assert.ok(server.includes('const adminConsoleEnabled=()=>!production')&&server.includes("if(!adminConsoleEnabled())return res.status(503)"),'Production Studio must remain disabled until explicitly enabled');
+assert.ok(client.includes('Administrator access')&&client.includes('Production requires a separate administrator identity and MFA'),'Studio must communicate its identity and MFA requirement');
+assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.includes("if(!demoAllowed())return res.status(503)"),'Production demo checkout must be rejected before settlement');
+assert.ok(server.includes("res.setHeader('X-Frame-Options','DENY')")&&server.includes("res.setHeader('Strict-Transport-Security'"),'Baseline browser security headers must be present');
+assert.equal(packageJson.engines?.node,'22.x','Package must declare the Azure Node major');
+assert.ok(workflow.includes("node-version: '22'")&&workflow.includes("npm audit --omit=dev --audit-level=high"),'CI must use Node 22 and audit production dependencies');
+assert.ok(workflow.includes("find migrations -maxdepth 1 -type f -name '*.sql'")&&workflow.includes("'.env*'"),'CI must validate all migrations and exclude dotenv files from deployment');
+assert.ok(preview.includes("'demoAllowed':True"),'Preview-only demo provider state must be explicit');
 console.log('source self-test passed');
