@@ -1,146 +1,30 @@
-# The IIT Delhi Drop
+# IIT Delhi Drop
 
-A creative, mobile-first merchandise storefront and operations Studio built with React, Anime.js, Node.js, Express.js and PostgreSQL.
+A campus merchandise storefront and Studio admin console. It supports product and media management, personalisation, loyalty wallet rewards, addresses, time-bound coupons, reviews, and demo/test/live payment modes.
 
-## What is included
+## Local setup
 
-- Responsive storefront with a stable embedded catalogue, size filters, sorting, four-card phone batches and graceful empty/error states.
-- Full product pages with exact size × colour variants, stock, customization preview and production-time disclosure; personalization is included in the product price.
-- Persistent cart with server-authoritative quote validation and Razorpay Standard Checkout when configured; production refuses no-charge demo orders.
-- Phone OTP registration and login, affiliation-aware profiles, optional hostel details, durable sessions and a customer loyalty wallet; production refuses demo OTP authentication until MSG91 is configured.
-- Per-product wallet reward percentages controlled from Studio; rewards and redemptions are recorded in an auditable PostgreSQL ledger.
-- Product customization placements are controlled per product from Studio; customers see only the enabled Front, Back or Side choices.
-- Verified-purchase reviews from My Orders, a 400-word limit, up to three image descriptors and Studio moderation. Placeholder ratings and seeded review counts are not shown.
-- PostgreSQL schema for catalogue, variants, inventory, customers, addresses, orders, customization snapshots, coupons, reviews and idempotent payment events.
-- Studio controls for products and photos, themes, motion, coupons, reviews, customers, product/size demand, wallet adjustments, customization placements and the complete Our Story page. Product management includes structured features, multiple photos, explicit thumbnail selection, archiving and safe draft deletion.
-- Argon2 administrator credentials, HttpOnly cookies, CSRF proofs, throttling, security headers and audit records.
-- Razorpay Standard Checkout and MSG91 OTP adapters; external providers remain disabled until credentials and merchant onboarding are configured, and production fails closed rather than exposing demo credentials or creating no-charge orders.
+Use Node.js 22 and PostgreSQL. Copy `.env.example` to `.env`, set secure secrets, then run:
 
-## Quick visual review (no database required)
-
-The local review adapter is non-persistent and never uses SQLite.
-
-```powershell
-python work/preview_server.py
-```
-
-Then open:
-
-- Storefront: `http://localhost:4173/`
-- Product: `http://localhost:4173/products/core-memory-hoodie`
-- Cart: `http://localhost:4173/cart`
-- Customer account: `http://localhost:4173/login`
-- Studio: `http://localhost:4173/studio`
-
-Local review credentials must be supplied only to the local process:
-
-- Customer OTP: the preview response contains a local-only code.
-- Studio email: set `ADMIN_PREVIEW_EMAIL` (or use the non-production placeholder default).
-- Studio password: set `ADMIN_PREVIEW_PASSWORD` in the shell before starting `work/preview_server.py` and the API self-test.
-
-The preview adapter contains no administrator password or live identity. These local values must never be used in a shared environment.
-
-## Production setup with PostgreSQL
-
-1. Install Node.js 22.x and PostgreSQL 16+.
-2. Copy `.env.example` to `.env` and replace every secret.
-3. Install packages with `npm install` (this creates a fresh lockfile for your platform).
-4. Create the database, then run `npm run db:migrate`.
-5. Generate an Argon2id admin password hash and assign it to `ADMIN_PASSWORD_HASH`.
-6. Run `npm start`.
-
-Docker can provide PostgreSQL locally:
-
-```powershell
-docker compose up -d postgres
+```bash
+npm install
 npm run db:migrate
-npm start
+npm run dev
 ```
 
-The production server refuses to boot without `DATABASE_URL`, `SESSION_SECRET` and `OTP_SECRET`. PostgreSQL is the only production data store.
+The application runs at `http://localhost:3000`. To start a local database in containers, run `docker compose up -d db` before migrations.
 
-Automated setup scripts
+## Required configuration
 
-Two helper scripts are provided to automate developer setup:
+Set `DATABASE_URL`, `SESSION_SECRET`, `OTP_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD_HASH`. Razorpay, MSG91, and Google Maps are optional; the exact variable names and safe local defaults are in `.env.example`. Keep payments and SMS in demo mode for local development, and never deploy a demo OTP.
 
-- Windows: `scripts/setup-windows.ps1` — attempts to install Node.js and Docker via `winget` (when available), runs `npm ci`, generates `ADMIN_PASSWORD_HASH`, starts Postgres via `docker compose`, runs migrations and boots the server.
+## Everyday commands
 
-- Linux / macOS: `scripts/setup-unix.sh` — installs Node.js (NodeSource/homebrew) and Docker (get.docker.com / Homebrew Cask) when possible, runs `npm ci`, generates `ADMIN_PASSWORD_HASH`, starts Postgres via `docker compose`, runs migrations and boots the server.
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start local development. |
+| `npm run db:migrate` | Apply PostgreSQL migrations. |
+| `npm run check` | Run source checks before a change. |
+| `python work/preview_server.py` | Run the non-persistent visual preview on port 4173. |
 
-Key Vault helper
-
-A helper script is provided to create an Azure Key Vault and store secrets. Use it after you provision an Azure resource group and are logged in with the Azure CLI:
-
-```
-# example
-export AZ_SUBSCRIPTION_ID="<your-subscription-id>"
-export AZ_RESOURCE_GROUP="my-iitd-rg"
-export AZURE_REGION="eastus"
-./azure/create-keyvault-and-secrets.sh my-iitd-keyvault
-```
-
-The script will prompt for any missing secret values: DATABASE_URL, SESSION_SECRET, OTP_SECRET, ADMIN_PASSWORD_HASH. The deployed App Service should use managed identity and Key Vault references rather than plaintext app settings.
-
-Usage (example):
-
-- Windows (PowerShell as Administrator):
-
-  .\scripts\setup-windows.ps1
-
-- Linux / macOS:
-
-  sudo ./scripts/setup-unix.sh
-
-If automatic installers are unavailable on your machine, follow the manual instructions above to install Node.js and Docker, then re-run the scripts. If you run into permission or PATH issues, open a fresh shell after installer finishes.
-
-## Content and merchandising controls
-
-The storefront has a dedicated `/our-story` page. Studio → **Our Story** edits its eyebrow, hero title, lead paragraph, motto label, motto, closing line, CTA label and image URL. Studio → **Products** controls each customizable product’s allowed placements; only the selected placements are presented to the customer and the server rejects any placement not enabled for that product.
-
-Ratings are calculated only from approved reviews. Products with no approved reviews do not show a score, star row, review count, or “be the first to review” placeholder. Studio moderation recalculates the product aggregate whenever a review changes state.
-
-## Azure deployment and CI/CD
-
-The live deployment uses the Linux App Service `merchstore-iitd-demo` and Azure Database for PostgreSQL Flexible Server in resource group `my-iitd-rg`. Production secrets are stored in Key Vault `merchstore-iitd-kv-2026`; App Service retrieves them through its managed identity. GitHub Actions authenticates to Azure through OIDC, opens a runner-only PostgreSQL firewall rule, runs `npm run db:migrate`, removes the rule even when a migration fails, deploys the ZIP package, restarts App Service and checks `/api/health`.
-
-For the exact manual commands, read `azure-manual-deployment-guide.md`. To inspect the PostgreSQL administrator password without printing it in application settings, use `az keyvault secret show --vault-name merchstore-iitd-kv-2026 --name POSTGRES-ADMIN-PASSWORD --query value -o tsv`. If the secret is unavailable, reset the PostgreSQL administrator password and update the Key Vault `DATABASE-URL` secret rather than committing a password.
-
-## Payment and messaging configuration
-
-The public catalogue is safe to run without purchasing either service. In production, `RAZORPAY_MODE=demo` and `SMS_PROVIDER=demo` are fail-closed: customers can browse, view products and build a bag, but the server refuses demo OTP challenges and no-charge demo orders. The local preview adapter remains intentionally demo-enabled for visual review only.
-
-For Razorpay, first use test credentials: set `RAZORPAY_MODE=test`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET`. The server creates the Razorpay order, the browser opens Standard Checkout, the server verifies the `razorpay_order_id|razorpay_payment_id` signature, and the webhook endpoint deduplicates events before settling the order. Switch to `RAZORPAY_MODE=live` only after merchant onboarding, test payments, failed/duplicate callback tests, reconciliation and a controlled live penny test. Never mark an order paid from a browser redirect alone.
-
-For MSG91, create and approve an OTP template, then set `SMS_PROVIDER=msg91`, `MSG91_AUTHKEY`, and `MSG91_TEMPLATE_ID`. The server calls MSG91 to send and verify the OTP; no local OTP is exposed in the response when MSG91 is active. If these values are absent, production sign-in is unavailable rather than falling back to a browser-visible code.
-
-Store these values as Azure Key Vault secrets and reference them from App Service settings. Do not commit them to `.env`, the repository, client-side code or browser-visible responses.
-
-## Production launch posture
-
-The Azure site is currently suitable as a public catalogue/showcase: the storefront, product pages, product media, cart quoting and health endpoint are live. Customer sign-in and checkout intentionally remain unavailable until their real providers are configured and tested. The production Studio console is also paused by default; the form no longer ships with credential defaults, and the existing shared administrator credential must be rotated before the console is explicitly enabled and treated as trusted.
-
-| Area | Current state | Required before accepting real customers or money |
-|---|---|---|
-| Catalogue and product experience | Live and browser-verified | Keep product, inventory and media content reviewed |
-| Customer authentication | Production demo OTP rejected; MSG91 not configured | Configure MSG91 in Key Vault, verify send/verify/expiry/rate limits, then test account creation and returning-user login |
-| Payments | Production demo checkout rejected; Razorpay not configured | Configure Razorpay test keys and webhook, test success/failure/duplicate callbacks and reconciliation, then switch to live only after merchant onboarding and a controlled live test |
-| Admin Studio | No client-side default credentials; shared password/HMAC session remains a risk | Rotate the compromised administrator credential, enable a separate identity with MFA and add revocation/least-privilege controls before operations |
-| Data and network controls | PostgreSQL and Key Vault are reachable through public endpoints | Prefer private endpoints/restricted firewall rules, Key Vault RBAC and purge protection, database TLS CA validation, backups/restore testing and a dedicated least-privilege application role |
-| Delivery controls | GitHub Actions deploys through OIDC and runs migrations | Protect `main`, require production environment approval, narrow the Azure identity scope and keep runner firewall cleanup monitored |
-| Browser supply chain | Current raw JSX/Babel/CDN architecture works but is not a strict CSP/SRI posture | Introduce a build/bundle pipeline, pin assets with integrity metadata, then enforce a tested Content Security Policy |
-| Business readiness | No live-money release yet | Add custom domain, privacy/terms, shipping/returns/refund policy, support contact, fulfilment/reconciliation workflow and monitoring alerts |
-
-Never enable a provider by placing credentials in browser code or chat. Add them as Key Vault secrets, set the corresponding App Service settings, restart the App Service if required, verify `/api/store` reports the intended readiness without exposing values, and run the provider-specific test checklist before enabling live traffic.
-
-## External adapters still required
-
-- MSG91 account, OTP template and auth key for real SMS delivery
-- Razorpay merchant onboarding, test/live credentials and webhook secret for real payments
-- S3-compatible object storage and CDN for product/review images
-- Transactional email provider
-- Shipping aggregator or courier workflow
-- Hosted observability and alerting
-
-MotionSites.ai informed the creative direction; Anime.js provides the local runtime motion. The concept artwork does not use an institutional seal. Obtain IIT Delhi branding and merchandise approvals before launch.
-
-The full implementation and launch sequence is in `outputs/postgresql-commerce-evolution-pipeline.md`.
+Studio is available at `/studio` with the configured administrator account. Use it to manage products, images, coupons, loyalty adjustments, storefront settings, and the Story page.
