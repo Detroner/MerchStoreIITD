@@ -4,7 +4,7 @@
 
 ## Executive status
 
-The Azure-hosted site is currently ready to operate as a **public catalogue and showcase**. The homepage, product experience, Dogra Drop catalogue item, media carousel, cart quoting, health endpoint, and production browser shell are live. The application is **not yet a live e-commerce launch**: customer authentication, no-charge demo checkout, and the Studio console are intentionally fail-closed until the real provider and identity controls are configured.
+The Azure-hosted site is currently ready to operate as a **public catalogue and showcase**. The homepage, product experience, The Dogra Drip catalogue item, media carousel, cart quoting, health endpoint, and production browser shell are live. The application is **not yet a live e-commerce launch**: customer authentication, no-charge demo checkout, and the Studio console are intentionally fail-closed until the real provider and identity controls are configured.
 
 > **Do not accept real orders or payments yet.** Razorpay and MSG91 credentials have deliberately not been added. The current posture is the safe one for showing the catalogue to others while those services are being purchased and onboarded.
 
@@ -22,7 +22,7 @@ The Azure-hosted site is currently ready to operate as a **public catalogue and 
 | Production routes | Homepage, cart, account, login, Studio, product, health, store, catalogue, JSX, and CSS probes returned HTTP 200 |
 | Production headers | HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, Referrer Policy, Permissions Policy, COOP, and CORP were present |
 | Production guard checks | OTP request, demo checkout, and admin login returned HTTP 503 without touching a live order or payment |
-| Browser verification | Homepage, Dogra Drop, cart, login, and Studio rendered; console checks reported no JavaScript errors |
+| Browser verification | Homepage, The Dogra Drip, cart, login, and Studio rendered; console checks reported no JavaScript errors |
 
 The deployment workflow now uses Node 22, declares the Node 22 engine in `package.json`, audits production dependencies, validates every non-empty SQL migration dynamically, and excludes dotenv, audit, fixture, and work artifacts from the deployment ZIP. The tracked preview adapter no longer contains a live-looking administrator identity or password; preview credentials must be injected for one local run.
 

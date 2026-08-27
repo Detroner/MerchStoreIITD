@@ -25,8 +25,11 @@ assert.ok(server.includes("pco.product_id=p.id AND pco.enabled"),'Customizable f
 assert.ok(server.includes("order_items SET delivered_at=COALESCE(delivered_at,now())"),'Delivered orders must unlock review eligibility');
 assert.ok(server.includes('colorway_id IS NOT DISTINCT FROM v.colorway_id'),'Quote images must follow the selected colorway');
 assert.ok(client.includes('add({...product,image:activeImage}'),'Cart must retain the selected colorway image');
-assert.ok(client.includes("||result.product.colorways?.find(x=>String(x.name).toLowerCase()==='beige')"),'Product detail must default to Beige');
+assert.ok(client.includes("||result.product.colorways?.find(x=>String(x.name).toLowerCase()==='black')"),'Product detail must default to Black');
 assert.ok(client.includes('catalog-color-dots'),'Catalogue cards must show available colour dots');
+assert.ok(client.includes('catalog-card-photos')&&client.includes("slice(0,2)"),'Catalogue cards must show up to two product photos');
+assert.ok(client.includes('HOSTEL')&&client.includes('ROOM NUMBER'),'Delivery settings must use hostel and room number fields');
+assert.ok(!client.includes('googleMapsBrowserKey')&&!client.includes('Google Maps')&&!client.includes('mapsPlaceId'),'Client must not expose or load Google Maps credentials');
 assert.ok(client.includes('aria-pressed={activeColorway?.id===colorway.id}'),'Catalogue colour dots must expose active state');
 assert.ok(client.includes('onClick={event=>selectColor(event,colorway)}'),'Catalogue colour dots must switch the card thumbnail');
 assert.ok(client.includes('MORE SOON'),'Storefront must include the More Soon message');
@@ -88,6 +91,8 @@ assert.ok(server.includes('const adminConsoleEnabled=()=>!production')&&server.i
 assert.ok(client.includes('Administrator access')&&client.includes('Production requires a separate administrator identity and MFA'),'Studio must communicate its identity and MFA requirement');
 assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.includes("if(!demoAllowed())return res.status(503)"),'Production demo checkout must be rejected before settlement');
 assert.ok(server.includes("res.setHeader('X-Frame-Options','DENY')")&&server.includes("res.setHeader('Strict-Transport-Security'"),'Baseline browser security headers must be present');
+assert.ok(server.includes('hostel_id,room_number')&&server.includes('SELECT id,name FROM hostels'),'Server must persist hostel delivery settings');
+assert.ok(server.includes('catalogMediaJson')&&!server.includes('googleMapsBrowserKey:process.env.GOOGLE_MAPS_BROWSER_KEY'),'Server must keep the Maps key out of the public store payload and scope catalogue media');
 assert.equal(packageJson.engines?.node,'22.x','Package must declare the Azure Node major');
 assert.ok(workflow.includes("node-version: '22'")&&workflow.includes("npm audit --omit=dev --audit-level=high"),'CI must use Node 22 and audit production dependencies');
 assert.ok(workflow.includes("find migrations -maxdepth 1 -type f -name '*.sql'")&&workflow.includes("'.env*'"),'CI must validate all migrations and exclude dotenv files from deployment');
