@@ -9,10 +9,10 @@ The final deployment contains three main Azure resources in the `my-iitd-rg` res
 | Resource | Name | Purpose |
 |---|---|---|
 | App Service plan | `merchstore-plan` | Provides Linux compute for the Node.js application |
-| Web App | `merchstore-iitd-demo` | Public HTTPS storefront and admin studio |
+| Web App | `theiitdelhidrop` | Public HTTPS storefront and admin studio |
 | PostgreSQL Flexible Server | `merchstore-pg-central` | Persistent application database |
 
-The public URL is `https://merchstore-iitd-demo.azurewebsites.net`. Azure provides the HTTPS certificate and the public DNS name automatically.
+The public URL is `https://theiitdelhidrop.azurewebsites.net`. Azure provides the HTTPS certificate and the public DNS name automatically.
 
 The App Service plan is **B1** rather than the Free F1 tier because the Free tier reached a quota-disabled state during deployment. The PostgreSQL server uses the **Standard_B1ms Burstable** tier. Both are paid Azure resources and therefore consume Azure credits while running.
 
@@ -233,12 +233,12 @@ Create the Node.js Web App:
 az webapp create \
   --resource-group my-iitd-rg \
   --plan merchstore-plan \
-  --name merchstore-iitd-demo \
+  --name theiitdelhidrop \
   --runtime "NODE:22-lts" \
   --https-only true
 ```
 
-The name must be globally unique because it becomes part of the hostname. If `merchstore-iitd-demo` is already taken in another subscription, choose another name.
+The name must be globally unique because it becomes part of the hostname. If `theiitdelhidrop` is already taken in another subscription, choose another name.
 
 ## 9. Configure Web App settings
 
@@ -247,7 +247,7 @@ Azure App Service settings become environment variables inside the Node.js proce
 ```bash
 az webapp config appsettings set \
   --resource-group my-iitd-rg \
-  --name merchstore-iitd-demo \
+  --name theiitdelhidrop \
   --settings \
     NODE_ENV=production \
     PORT=4173 \
@@ -277,7 +277,7 @@ Set the startup command to run only the already-completed application process:
 ```bash
 az webapp config set \
   --resource-group my-iitd-rg \
-  --name merchstore-iitd-demo \
+  --name theiitdelhidrop \
   --startup-file "node server.mjs"
 ```
 
@@ -300,7 +300,7 @@ Deploy the ZIP:
 ```bash
 az webapp deploy \
   --resource-group my-iitd-rg \
-  --name merchstore-iitd-demo \
+  --name theiitdelhidrop \
   --src-path ../merchstore-webapp.zip \
   --type zip \
   --restart true
@@ -311,7 +311,7 @@ If the asynchronous Kudu polling hangs, the older but useful fallback is:
 ```bash
 az webapp deployment source config-zip \
   --resource-group my-iitd-rg \
-  --name merchstore-iitd-demo \
+  --name theiitdelhidrop \
   --src ../merchstore-webapp.zip
 ```
 
@@ -324,7 +324,7 @@ Check the Azure resource state:
 ```bash
 az webapp show \
   --resource-group my-iitd-rg \
-  --name merchstore-iitd-demo \
+  --name theiitdelhidrop \
   --query "{state:state,availability:availabilityState,hostNames:hostNames}" \
   --output json
 ```
@@ -332,7 +332,7 @@ az webapp show \
 Check the application health endpoint:
 
 ```bash
-curl -i https://merchstore-iitd-demo.azurewebsites.net/api/health
+curl -i https://theiitdelhidrop.azurewebsites.net/api/health
 ```
 
 Expected response:
@@ -344,29 +344,29 @@ Expected response:
 Check the seeded catalogue:
 
 ```bash
-curl -i 'https://merchstore-iitd-demo.azurewebsites.net/api/catalog?limit=3'
+curl -i 'https://theiitdelhidrop.azurewebsites.net/api/catalog?limit=3'
 ```
 
 Open the storefront in a browser:
 
 ```text
-https://merchstore-iitd-demo.azurewebsites.net
+https://theiitdelhidrop.azurewebsites.net
 ```
 
 Open the administration studio at:
 
 ```text
-https://merchstore-iitd-demo.azurewebsites.net/studio
+https://theiitdelhidrop.azurewebsites.net/studio
 ```
 
 ## 12. Troubleshooting commands
 
 | Problem | Useful command | What to look for |
 |---|---|---|
-| Site is disabled | `az webapp show -g my-iitd-rg -n merchstore-iitd-demo --query state` | `QuotaExceeded` usually means the Free plan quota was reached |
-| Site returns 503 | `az webapp log tail -g my-iitd-rg -n merchstore-iitd-demo` | Node startup errors, wrong port, missing module, or failed migration |
-| Deployment status | `az webapp log deployment list -g my-iitd-rg -n merchstore-iitd-demo` | Latest deployment status and timestamp |
-| Download logs | `az webapp log download -g my-iitd-rg -n merchstore-iitd-demo --log-file webapp_logs.zip` | Startup and Kudu deployment logs |
+| Site is disabled | `az webapp show -g my-iitd-rg -n theiitdelhidrop --query state` | `QuotaExceeded` usually means the Free plan quota was reached |
+| Site returns 503 | `az webapp log tail -g my-iitd-rg -n theiitdelhidrop` | Node startup errors, wrong port, missing module, or failed migration |
+| Deployment status | `az webapp log deployment list -g my-iitd-rg -n theiitdelhidrop` | Latest deployment status and timestamp |
+| Download logs | `az webapp log download -g my-iitd-rg -n theiitdelhidrop --log-file webapp_logs.zip` | Startup and Kudu deployment logs |
 | Database cannot connect | `az postgres flexible-server firewall-rule list -g my-iitd-rg -s merchstore-pg-central` | Confirm the App Service/Azure rule or temporary client rule exists |
 | Provider failure | `az provider show -n Microsoft.Web --query registrationState` | Provider should report `Registered` |
 | Region/SKU unavailable | `az vm list-skus --location centralindia --resource-type virtualMachines` | Capacity restrictions may require another region or SKU |
@@ -380,7 +380,7 @@ Stop the Web App when you are not presenting:
 ```bash
 az webapp stop \
   --resource-group my-iitd-rg \
-  --name merchstore-iitd-demo
+  --name theiitdelhidrop
 ```
 
 Start it again before a presentation:
@@ -388,7 +388,7 @@ Start it again before a presentation:
 ```bash
 az webapp start \
   --resource-group my-iitd-rg \
-  --name merchstore-iitd-demo
+  --name theiitdelhidrop
 ```
 
 Stop the PostgreSQL server when it is not needed:

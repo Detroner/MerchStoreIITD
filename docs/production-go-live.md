@@ -14,7 +14,7 @@ The Azure-hosted site is currently ready to operate as a **public catalogue and 
 |---|---|
 | Git commit | `7b2690e` — Harden production launch gates and deployment |
 | GitHub Actions | Run `32831357492` completed successfully |
-| Production URL | `https://merchstore-iitd-demo.azurewebsites.net` |
+| Production URL | `https://theiitdelhidrop.azurewebsites.net` |
 | Local application checks | `npm run check` passed; Node syntax and source contracts passed |
 | JSX/rendering checks | Full Babel parser and rendering regression harness passed |
 | Preview checks | Python syntax, preview self-test, and preview API self-test passed with generated one-run fixture credentials |
@@ -55,7 +55,7 @@ Use a real test phone owned by the operator to verify the complete flow: send, w
 First configure `RAZORPAY_MODE=test`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET` through Key Vault references. Configure the Razorpay webhook URL as:
 
 ```text
-https://merchstore-iitd-demo.azurewebsites.net/api/payments/razorpay/webhook
+https://theiitdelhidrop.azurewebsites.net/api/payments/razorpay/webhook
 ```
 
 Test successful payment, failed payment, user dismissal, a stale or mismatched order, a mismatched amount or currency, a duplicate webhook, and a delayed or out-of-order webhook. Verify that the server only settles a captured INR payment matched to the internal order and that inventory, wallet redemption, wallet reward, payment attempts, and audit records are each changed exactly once. Razorpay documents raw-body HMAC-SHA256 signature validation, duplicate event handling through the event ID, and the fact that webhook order is not guaranteed [3].
@@ -75,7 +75,7 @@ az keyvault secret set --vault-name merchstore-iitd-kv-2026 --name MSG91-TEMPLAT
 
 az webapp config appsettings set \
   --resource-group my-iitd-rg \
-  --name merchstore-iitd-demo \
+  --name theiitdelhidrop \
   --settings \
     SMS_PROVIDER='msg91' \
     MSG91_AUTHKEY='@Microsoft.KeyVault(VaultName=merchstore-iitd-kv-2026;SecretName=MSG91-AUTHKEY)' \

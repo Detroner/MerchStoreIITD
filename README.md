@@ -101,7 +101,7 @@ Ratings are calculated only from approved reviews. Products with no approved rev
 
 ## Azure deployment and CI/CD
 
-The live deployment uses the Linux App Service `merchstore-iitd-demo` and Azure Database for PostgreSQL Flexible Server in resource group `my-iitd-rg`. Production secrets are stored in Key Vault `merchstore-iitd-kv-2026`; App Service retrieves them through its managed identity. GitHub Actions authenticates to Azure through OIDC, opens a runner-only PostgreSQL firewall rule, runs `npm run db:migrate`, removes the rule even when a migration fails, deploys the ZIP package, restarts App Service and checks `/api/health`.
+The live deployment uses the Linux App Service `theiitdelhidrop` and Azure Database for PostgreSQL Flexible Server in resource group `my-iitd-rg`. Production secrets are stored in Key Vault `merchstore-iitd-kv-2026`; App Service retrieves them through its managed identity. GitHub Actions authenticates to Azure through OIDC, opens a runner-only PostgreSQL firewall rule, runs `npm run db:migrate`, removes the rule even when a migration fails, deploys the ZIP package, restarts App Service and checks `/api/health`.
 
 For the exact manual commands, read `azure-manual-deployment-guide.md`. To inspect the PostgreSQL administrator password without printing it in application settings, use `az keyvault secret show --vault-name merchstore-iitd-kv-2026 --name POSTGRES-ADMIN-PASSWORD --query value -o tsv`. If the secret is unavailable, reset the PostgreSQL administrator password and update the Key Vault `DATABASE-URL` secret rather than committing a password.
 

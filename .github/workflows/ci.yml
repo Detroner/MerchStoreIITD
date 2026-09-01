@@ -15,7 +15,7 @@ env:
   AZURE_TENANT_ID: 624d5c4b-45c5-4122-8cd0-44f0f84e945d
   AZURE_CLIENT_ID: ded95689-008b-4dc8-83bf-d5b75b1c9808
   AZURE_RESOURCE_GROUP: my-iitd-rg
-  AZURE_WEBAPP_NAME: merchstore-iitd-demo
+  AZURE_WEBAPP_NAME: theiitdelhidrop
   AZURE_KEYVAULT_NAME: merchstore-iitd-kv-2026
   AZURE_POSTGRES_SERVER: merchstore-pg-central
 
