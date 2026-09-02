@@ -21,6 +21,7 @@ for(const selector of ['.orders-workspace','.orders-filterbar','.matrix-card','.
 assert.ok(client.includes('product.catalogItemId||product.id'),'Catalogue cards need stable colorway keys');
 assert.ok(server.includes("vbi.id IS NULL AND o.payment_status IN('paid','captured')"),'New-vendor eligibility must require payment');
 assert.ok(server.includes("'/home/data/product-media'"),'Azure App Service media must use persistent storage');
+assert.ok(server.includes("const packagedMediaRoot=path.join(root,'data','product-media')")&&server.includes('hasMediaFiles'),'Production media must fall back to packaged assets when persistent storage is empty');
 assert.ok(server.includes("pco.product_id=p.id AND pco.enabled"),'Customizable filter must require enabled rules');
 assert.ok(server.includes("order_items SET delivered_at=COALESCE(delivered_at,now())"),'Delivered orders must unlock review eligibility');
 assert.ok(server.includes('colorway_id IS NOT DISTINCT FROM v.colorway_id'),'Quote images must follow the selected colorway');
