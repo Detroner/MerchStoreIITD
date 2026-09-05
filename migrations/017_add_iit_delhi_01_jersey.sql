@@ -1,6 +1,6 @@
 -- Add the IIT Delhi 01 maroon jersey as a reversible catalogue product.
 -- The two tracked media files are the front and back halves of the supplied source image.
-INSERT INTO products(name,slug,short_description,description,base_price,compare_price,badge,card_color,status,featured,customizable,sort_order)
+INSERT INTO products(name,slug,short_description,description,base_price,compare_price,card_color,status,featured,customizable,sort_order)
 VALUES(
   'IIT Delhi 01 Jersey',
   'iit-delhi-01-jersey',
@@ -8,7 +8,6 @@ VALUES(
   'A campus-first maroon jersey with contrast athletic stripes, IIT Delhi lettering on the front and 01 on the back.',
   119900,
   149900,
-  'NEW DROP',
   '#6a1e24',
   'active',
   TRUE,
@@ -21,7 +20,6 @@ ON CONFLICT(slug) DO UPDATE SET
   description=EXCLUDED.description,
   base_price=EXCLUDED.base_price,
   compare_price=EXCLUDED.compare_price,
-  badge=EXCLUDED.badge,
   card_color=EXCLUDED.card_color,
   status='active',
   featured=TRUE,
