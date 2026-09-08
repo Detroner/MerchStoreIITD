@@ -123,6 +123,17 @@ jobs:
             --track-status true \
             --subscription "$AZURE_SUBSCRIPTION_ID"
 
+      - name: Enable Studio console
+        # Studio still requires ADMIN_EMAIL and ADMIN_PASSWORD_HASH from App Service/Key Vault.
+        # This flag only lifts the deliberate production fail-closed gate.
+        run: |
+          az webapp config appsettings set \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME" \
+            --settings ADMIN_CONSOLE_ENABLED=true \
+            --subscription "$AZURE_SUBSCRIPTION_ID" \
+            -o none
+
       - name: Restart App Service
         run: az webapp restart --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --subscription "$AZURE_SUBSCRIPTION_ID"
 

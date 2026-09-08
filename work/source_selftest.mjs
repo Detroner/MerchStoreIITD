@@ -102,5 +102,6 @@ assert.ok(server.includes('catalogMediaJson')&&!server.includes('googleMapsBrows
 assert.equal(packageJson.engines?.node,'22.x','Package must declare the Azure Node major');
 assert.ok(workflow.includes("node-version: '22'")&&workflow.includes("npm audit --omit=dev --audit-level=high"),'CI must use Node 22 and audit production dependencies');
 assert.ok(workflow.includes("find migrations -maxdepth 1 -type f -name '*.sql'")&&workflow.includes("'.env*'"),'CI must validate all migrations and exclude dotenv files from deployment');
+assert.ok(workflow.includes('ADMIN_CONSOLE_ENABLED=true'),'Deployment must explicitly enable the protected Studio console');
 assert.ok(preview.includes("'demoAllowed':True"),'Preview-only demo provider state must be explicit');
 console.log('source self-test passed');

@@ -4,7 +4,7 @@
 
 ## Executive status
 
-The Azure-hosted site is currently ready to operate as a **public catalogue and showcase**. The homepage, product experience, The Dogra Drip catalogue item, media carousel, cart quoting, health endpoint, and production browser shell are live. The application is **not yet a live e-commerce launch**: customer authentication, no-charge demo checkout, and the Studio console are intentionally fail-closed until the real provider and identity controls are configured.
+The Azure-hosted site is currently ready to operate as a **public catalogue, showcase, and protected Studio console**. The homepage, product experience, The Dogra Drip catalogue item, media carousel, cart quoting, health endpoint, production browser shell, and Studio route are live. The application is **not yet a live e-commerce launch**: customer authentication and no-charge demo checkout remain fail-closed until the real provider controls are configured.
 
 > **Do not accept real orders or payments yet.** Razorpay and MSG91 credentials have deliberately not been added. The current posture is the safe one for showing the catalogue to others while those services are being purchased and onboarded.
 
@@ -21,7 +21,7 @@ The Azure-hosted site is currently ready to operate as a **public catalogue and 
 | Production dependency audit | `npm audit --omit=dev --audit-level=high` found zero vulnerabilities |
 | Production routes | Homepage, cart, account, login, Studio, product, health, store, catalogue, JSX, and CSS probes returned HTTP 200 |
 | Production headers | HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, Referrer Policy, Permissions Policy, COOP, and CORP were present |
-| Production guard checks | OTP request, demo checkout, and admin login returned HTTP 503 without touching a live order or payment |
+| Production guard checks | OTP request and demo checkout remain HTTP 503; Studio admin login is enabled but still requires the configured administrator email and password hash |
 | Browser verification | Homepage, The Dogra Drip, cart, login, and Studio rendered; console checks reported no JavaScript errors |
 
 The deployment workflow now uses Node 22, declares the Node 22 engine in `package.json`, audits production dependencies, validates every non-empty SQL migration dynamically, and excludes dotenv, audit, fixture, and work artifacts from the deployment ZIP. The tracked preview adapter no longer contains a live-looking administrator identity or password; preview credentials must be injected for one local run.
@@ -33,14 +33,14 @@ The deployment workflow now uses Node 22, declares the Node 22 engine in `packag
 | Customer phone sign-in | `503`: secure sign-in is unavailable until MSG91 is configured | Prevents browser-visible demo OTPs from becoming an authentication method |
 | Demo checkout | `503`: no-charge orders are disabled in production before customer-session lookup | Prevents stock, wallet, coupon, and order mutations without a real payment |
 | Razorpay checkout | Not configured; no provider order is created | No Razorpay account or credentials have been supplied |
-| Studio login and admin APIs | `503` while `ADMIN_CONSOLE_ENABLED` is not explicitly true in production | Protects the shared-password/HMAC console until the administrator identity is rotated and strengthened |
+| Studio login and admin APIs | Enabled by the deployment workflow through `ADMIN_CONSOLE_ENABLED=true`; access still requires `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`, the session cookie, and the HMAC proof header | Keeps the console protected while allowing the operator to use the Studio |
 | Product browsing and cart quoting | Available | Catalogue can be demonstrated without pretending that ordering is live |
 
 ## Exact operator checklist before live money
 
 ### 1. Remediate the administrator identity first
 
-Treat the previously used shared administrator credential as compromised. Rotate the administrator password hash in Key Vault, invalidate any existing administrator sessions, and do not enable the console until a separate administrator identity with MFA and a revocation path is in place. After that work is complete, set the App Service setting `ADMIN_CONSOLE_ENABLED=true`. The application will otherwise continue to return the deliberate 503 response for Studio login and admin APIs.
+Treat the previously used shared administrator credential as compromised. Rotate the administrator password hash in Key Vault and invalidate any existing administrator sessions. The deployment workflow now sets `ADMIN_CONSOLE_ENABLED=true`, but the console still depends on `ADMIN_EMAIL` and `ADMIN_PASSWORD_HASH` being configured in App Service or Key Vault. The current login remains a shared-password/HMAC flow; replace it with a separate administrator identity, MFA, and a revocation path before treating the console as a final production control.
 
 The current server still uses a shared password plus an HMAC proof cookie rather than a full identity provider. That is acceptable for the paused catalogue-only posture, but it is not the target control for a production operations console.
 
