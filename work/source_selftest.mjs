@@ -94,7 +94,7 @@ assert.ok(client.includes('SIGN-IN NOT CONFIGURED'),'Production sign-in must fai
 assert.ok(client.includes('htmlFor="studio-email"')&&client.includes('autoComplete="current-password"'),'Studio credentials must have accessible labels and autofill semantics');
 assert.ok(server.includes("const demoAllowed=()=>!production")&&server.includes("provider==='demo'&&!demoAllowed()"),'Production demo OTP must be rejected');
 assert.ok(server.includes('const adminConsoleEnabled=()=>!production')&&server.includes("if(!adminConsoleEnabled())return res.status(503)"),'Production Studio must remain disabled until explicitly enabled');
-assert.ok(client.includes('Administrator access')&&client.includes('Production requires a separate administrator identity and MFA'),'Studio must communicate its identity and MFA requirement');
+assert.ok(client.includes('Administrator access')&&client.includes('Use the administrator credentials configured for this deployment.'),'Studio must explain how to authenticate');
 assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.includes("if(!demoAllowed())return res.status(503)"),'Production demo checkout must be rejected before settlement');
 assert.ok(server.includes("res.setHeader('X-Frame-Options','DENY')")&&server.includes("res.setHeader('Strict-Transport-Security'"),'Baseline browser security headers must be present');
 assert.ok(server.includes('hostel_id,room_number')&&server.includes('SELECT id,name FROM hostels'),'Server must persist hostel delivery settings');
