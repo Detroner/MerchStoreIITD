@@ -13,6 +13,7 @@ const packageJson=JSON.parse(fs.readFileSync(new URL('../package.json',import.me
 const migration=fs.readFileSync(new URL('../migrations/004_order_operations_colorways.sql',import.meta.url),'utf8');
 const mediaMigration=fs.readFileSync(new URL('../migrations/010_product_catalog_management.sql',import.meta.url),'utf8');
 const jerseyMigration=fs.readFileSync(new URL('../migrations/017_add_iit_delhi_01_jersey.sql',import.meta.url),'utf8');
+const priceMigration=fs.readFileSync(new URL('../migrations/018_update_drop_prices.sql',import.meta.url),'utf8');
 
 for(const route of ['/api/admin/orders','/api/admin/orders/summary','/api/admin/orders/matrix','/api/admin/vendor-batches','/api/admin/products/:id/customization','/api/admin/products/:id/colorways','/api/admin/products/:id/media/upload','/api/admin/media/:id','/api/admin/products/:id/restore'])assert.ok(server.includes(route),`Missing ${route}`);
 for(const table of ['product_colorways','vendor_batches','vendor_batch_items','order_status_history'])assert.ok(migration.includes(`CREATE TABLE ${table}`),`Missing ${table}`);
@@ -37,11 +38,19 @@ assert.ok(client.includes('catalog-card-photos')&&client.includes("slice(0,2)"),
 assert.ok(client.includes('HOSTEL')&&client.includes('ROOM NUMBER'),'Delivery settings must use hostel and room number fields');
 assert.ok(!client.includes('googleMapsBrowserKey')&&!client.includes('Google Maps')&&!client.includes('mapsPlaceId'),'Client must not expose or load Google Maps credentials');
 assert.ok(client.includes('aria-pressed={activeColorway?.id===colorway.id}'),'Catalogue colour dots must expose active state');
+assert.ok(priceMigration.includes("slug='iit-delhi-01-jersey'")&&priceMigration.includes('base_price=59900')&&priceMigration.includes('compare_price=79900'),'Jersey price migration must set ₹599 with ₹799 compare price');
+assert.ok(priceMigration.includes("slug='dogra-drip'")&&priceMigration.includes('base_price=69900')&&priceMigration.includes('compare_price=79900'),'Dogra price migration must set ₹699 with ₹799 compare price');
+assert.ok(client.includes('catalog-add')&&client.includes('addToCart={add}'),'Catalogue cards must provide a direct add-to-cart action');
+assert.ok(client.includes("api('/api/catalog?limit=100')")&&client.includes('activeVariants')&&client.includes('discontinued'),'Cart must reconcile discontinued products against the active catalogue');
+assert.ok(client.includes('onTouchStart={handleTouchStart}')&&client.includes('onTouchEnd={handleTouchEnd}')&&client.includes('moveGallery'),'Product gallery must support swipe navigation alongside buttons');
 assert.ok(client.includes('onClick={event=>selectColor(event,colorway)}'),'Catalogue colour dots must switch the card thumbnail');
 assert.ok(client.includes('MORE SOON'),'Storefront must include the More Soon message');
 assert.ok(client.includes('function MoreSoonSection'),'More Soon message must be a standalone section');
 assert.ok(client.includes('<MoreSoonSection/>'),'More Soon section must sit after the catalogue');
-assert.ok(styles.includes('.more-soon'),'More Soon section must have dedicated styling');
+assert.ok(styles.includes('.more-soon'),'More Soon message must have dedicated styling');
+assert.ok(styles.includes('.catalog-card-actions')&&styles.includes('.catalog-add'),'Quick-add cards must have dedicated responsive styling');
+assert.ok(styles.includes('.pdp-gallery-stage')&&styles.includes('touch-action:pan-y'),'Product gallery must expose a touch-safe swipe surface');
+assert.ok(styles.includes('.cart-discontinued-notice'),'Discontinued cart cleanup must be visible to customers');
 assert.ok(!client.includes('ComingSoonCard'),'Placeholder product card must be removed');
 assert.ok(!styles.includes('.coming-soon-card'),'Placeholder product-card styling must be removed');
 assert.ok(styles.includes('.coupon-entry label{display:grid;gap:10px'),'Coupon label and input need intentional spacing');
