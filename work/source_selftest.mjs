@@ -49,6 +49,9 @@ assert.ok(styles.includes('.size-prompt{position:fixed')&&styles.includes('.size
 assert.ok(!client.includes('theme-switch')&&!styles.includes('theme-switch'),'Storefront dark-mode switch must be gone');
 assert.ok(client.includes("const currentMode=()=>'light'")&&!client.includes('iitd-drop-theme'),'Storefront must render light and ignore any stored dark preference');
 assert.ok(client.includes('themeVars(draft,previewMode)'),'Studio must keep its own light/dark appearance preview');
+const heroMigration=fs.readFileSync(new URL('../migrations/020_refresh_hero_image.sql',import.meta.url),'utf8');
+assert.ok(heroMigration.includes("value='/assets/merch-hero.png?v=20260919'")&&heroMigration.includes("AND value='/assets/merch-hero.png'"),'Replaced hero art must be cache-busted without overwriting a Studio-chosen image');
+assert.ok(preview.includes("'heroImage':'/assets/merch-hero.png?v=20260919'"),'Local preview must serve the same versioned hero URL');
 assert.ok(client.includes("api('/api/catalog?limit=100')")&&client.includes('activeVariants')&&client.includes('discontinued'),'Cart must reconcile discontinued products against the active catalogue');
 assert.ok(client.includes('onTouchStart={handleTouchStart}')&&client.includes('onTouchEnd={handleTouchEnd}')&&client.includes('moveGallery'),'Product gallery must support swipe navigation alongside buttons');
 assert.ok(client.includes('onClick={event=>selectColor(event,colorway)}'),'Catalogue colour dots must switch the card thumbnail');
