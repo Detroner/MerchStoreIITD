@@ -77,6 +77,11 @@ assert.ok(client.includes('const quickStatus=async product=>')&&client.includes(
 assert.ok(client.includes('className="product-search"')&&client.includes('statusFilter'),'Product list must be searchable and filterable by status');
 assert.ok(client.includes('className="product-index-pick"'),'Product rows must separate selection from their quick actions');
 assert.ok(styles.includes('.catalog-art{height:min(96vw,470px)'),'Mobile product cards must use the shorter photo frame');
+// order_status_history.field_name is CHECK-constrained to the column names; passing 'fulfilment'
+// instead of 'fulfilment_status' aborts the whole transaction, which is how the delivered tick broke.
+const historyFields=[...server.matchAll(/INSERT INTO order_status_history\([^)]*\)[\s\S]{0,120}?\[[^,\[\]]+,'([a-z_]+)'/g)].map(m=>m[1]);
+const badHistoryFields=historyFields.filter(name=>!['order_status','payment_status','fulfilment_status'].includes(name));
+assert.ok(historyFields.length>0&&!badHistoryFields.length,`order_status_history.field_name must be a constrained column name, found: ${badHistoryFields.join(', ')}`);
 assert.ok(client.includes("api('/api/catalog?limit=100')")&&client.includes('activeVariants')&&client.includes('discontinued'),'Cart must reconcile discontinued products against the active catalogue');
 assert.ok(client.includes('onTouchStart={handleTouchStart}')&&client.includes('onTouchEnd={handleTouchEnd}')&&client.includes('moveGallery'),'Product gallery must support swipe navigation alongside buttons');
 assert.ok(client.includes('onClick={event=>selectColor(event,colorway)}'),'Catalogue colour dots must switch the card thumbnail');

@@ -52,6 +52,7 @@ REVIEWS=[{'id':'review-1','product_id':'hood','rating':5,'title':'Feels properly
 USERS={};SESSIONS={};OTP={};ADMIN_SESSIONS=set();ADDRESSES={}
 DEMO_ITEMS=[{'id':'demo-item-1','productId':'hood','name':'Core Memory Hoodie','slug':'core-memory-hoodie','sku':'IITD-HOOD-02','size':'M','color':'Navy','image':'/assets/merch-hero.png','quantity':1,'unitPrice':249900,'deliveredAt':'2026-08-06T12:00:00Z','reviewed':False,'customization':{'text':'TANISH','placement':'Front chest','style':'Campus Block','color':'White'}},{'id':'demo-item-2','productId':'tee','name':'Main Building Tee','slug':'main-building-tee','sku':'IITD-TEE-03','size':'L','color':'Navy','image':'/assets/merch-hero.png','quantity':1,'unitPrice':99900,'deliveredAt':None,'reviewed':False,'customization':None}]
 ORDERS=[{'id':'order-1','order_no':'IITD-2048','customer_name':'Demo Customer','total':364700,'order_status':'delivered','fulfilment_status':'delivered','created_at':'2026-08-02T09:40:00Z','items':DEMO_ITEMS}]
+ORDER_HISTORY=[]
 ORDERS[0].update({'phone':'+919876500011','hostel':'Nilgiri','room_number':'118','payment_status':'paid','delivered_at':'2026-08-06T12:00:00Z'})
 PENDING_ITEMS=[{'id':'demo-item-3','productId':'tee','name':'Main Building Tee','slug':'main-building-tee','sku':'IITD-TEE-05','size':'M','color':'Cream','image':'/assets/merch-hero.png','quantity':2,'unitPrice':99900,'deliveredAt':None,'reviewed':False,'customization':None},{'id':'demo-item-4','productId':'cap','name':'Red Brick Cap','slug':'red-brick-cap','sku':'IITD-CAP-01','size':'One Size','color':'Campus Edition','image':'/assets/merch-hero.png','quantity':1,'unitPrice':69900,'deliveredAt':None,'reviewed':False,'customization':None}]
 ORDERS.append({'id':'order-2','order_no':'IITD-2049','customer_name':'Aarav Sharma','phone':'+919812345678','hostel':'Karakoram','room_number':'112','payment_status':'paid','total':269700,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-14T11:20:00Z','items':PENDING_ITEMS})
@@ -397,10 +398,13 @@ class Handler(BaseHTTPRequestHandler):
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
    oid=path.split('/')[4];order=next((o for o in ORDERS if o['id']==oid),None)
    if not order:return self.json_out({'error':'Order not found.'},404)
-   flag=body.get('delivered') is True or body.get('delivered')=='true'
+   flag=body.get('delivered') is True or body.get('delivered')=='true';previous=order.get('fulfilment_status','unfulfilled')
    order['fulfilment_status']='delivered' if flag else 'dispatched'
    order['delivered_at']=datetime.now(timezone.utc).replace(microsecond=0).isoformat() if flag else None
    for item in order['items']:item['deliveredAt']=order['delivered_at']
+   field_name='fulfilment_status'
+   if field_name not in ('order_status','payment_status','fulfilment_status'):return self.json_out({'error':'order_status_history.field_name violates its CHECK constraint.'},500)
+   ORDER_HISTORY.append({'order_id':oid,'field_name':field_name,'previous_value':previous,'next_value':order['fulfilment_status']})
    return self.json_out({'ok':True,'delivered':flag})
   if path.startswith('/api/admin/orders/') and path.endswith('/status'):
    token=cookie_value(self.headers,'admin_session')
