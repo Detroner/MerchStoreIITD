@@ -151,6 +151,7 @@ assert.ok(client.includes('CHECKOUT UNAVAILABLE'),'Production checkout must fail
 assert.ok(client.includes('SIGN-IN NOT CONFIGURED'),'Production sign-in must fail closed in the customer UI');
 assert.ok(client.includes('htmlFor="studio-email"')&&client.includes('autoComplete="current-password"'),'Studio credentials must have accessible labels and autofill semantics');
 assert.ok(server.includes("const demoAllowed=()=>!production")&&server.includes("provider==='demo'&&!demoAllowed()"),'Production demo OTP must be rejected');
+assert.ok(server.includes("url.searchParams.set('mobile',msg91Mobile(mobile))"),'MSG91 must receive plain country-code digits, not a percent-encoded +');
 assert.ok(server.includes('const adminConsoleEnabled=()=>!production')&&server.includes("if(!adminConsoleEnabled())return res.status(503)"),'Production Studio must remain disabled until explicitly enabled');
 assert.ok(client.includes('Administrator access')&&client.includes('Use the administrator credentials configured for this deployment.'),'Studio must explain how to authenticate');
 assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.includes("if(!demoAllowed())return res.status(503)"),'Production demo checkout must be rejected before settlement');
