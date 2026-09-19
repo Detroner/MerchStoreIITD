@@ -46,6 +46,9 @@ assert.ok(client.includes('id="select-size"')&&client.includes("document.getElem
 assert.ok(client.includes('setTimeout(()=>setSizePrompt(false),5000)'),'Size prompt must clear itself after five seconds');
 assert.ok(client.includes('setSize(x);setSizePrompt(false)'),'Size prompt must let shoppers pick a size directly');
 assert.ok(styles.includes('.size-prompt{position:fixed')&&styles.includes('.size-prompt-sizes'),'Size prompt must ship themed styling');
+assert.ok(!client.includes('theme-switch')&&!styles.includes('theme-switch'),'Storefront dark-mode switch must be gone');
+assert.ok(client.includes("const currentMode=()=>'light'")&&!client.includes('iitd-drop-theme'),'Storefront must render light and ignore any stored dark preference');
+assert.ok(client.includes('themeVars(draft,previewMode)'),'Studio must keep its own light/dark appearance preview');
 assert.ok(client.includes("api('/api/catalog?limit=100')")&&client.includes('activeVariants')&&client.includes('discontinued'),'Cart must reconcile discontinued products against the active catalogue');
 assert.ok(client.includes('onTouchStart={handleTouchStart}')&&client.includes('onTouchEnd={handleTouchEnd}')&&client.includes('moveGallery'),'Product gallery must support swipe navigation alongside buttons');
 assert.ok(client.includes('onClick={event=>selectColor(event,colorway)}'),'Catalogue colour dots must switch the card thumbnail');
