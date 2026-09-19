@@ -113,6 +113,10 @@ class Handler(BaseHTTPRequestHandler):
    s=self.customer()
    if not s:return self.json_out({'error':'No customer session.'},401)
    return self.json_out({'user':s['user'],'csrf':s['csrf']})
+  if path=='/api/account/wallet':
+   session=self.require_customer()
+   if not session:return
+   return self.json_out({'balance':0,'currency':'INR','entries':[]})
   if path=='/api/account/orders':
    if not self.require_customer():return
    return self.json_out({'orders':ORDERS})
@@ -255,12 +259,48 @@ class Handler(BaseHTTPRequestHandler):
   if path=='/api/account/addresses':
    session=self.require_customer()
    if not session:return
-   postal=re.sub(r'\D','',str(body.get('postalCode','')))
-   if not all(str(body.get(x,'')).strip() for x in ['recipientName','line1','city','state']) or len(postal)!=6:return self.json_out({'error':'Recipient, street, city, state and a six-digit PIN code are required.'},400)
-   address={'id':secrets.token_hex(8),'label':str(body.get('label','Home'))[:30],'recipient_name':str(body['recipientName'])[:100],'phone_e164':'+91'+re.sub(r'\D','',str(body.get('phone','')))[-10:] if body.get('phone') else session['user']['phone'],'line_1':str(body['line1'])[:160],'line_2':str(body.get('line2',''))[:160],'landmark':str(body.get('landmark',''))[:100],'city':str(body['city'])[:80],'state':str(body['state'])[:80],'postal_code':postal,'is_default':bool(body.get('isDefault'))};book=ADDRESSES.setdefault(session['user']['phone'],[])
+   # hostel-only delivery, matching server.mjs: the shop only delivers inside campus, so the
+   # address is a hostel plus a room number rather than a free-form street address.
+   hostel_id=str(body.get('hostelId','')).strip();room=str(body.get('roomNumber','')).strip()[:30]
+   hostel=next((h for h in HOSTELS if h['id']==hostel_id),None)
+   if not hostel or not room:return self.json_out({'error':'Select your hostel and enter your room number.'},400)
+   book=ADDRESSES.setdefault(session['user']['phone'],[])
+   address={'id':secrets.token_hex(8),'label':'Hostel','recipient_name':str(body.get('recipientName') or session['user'].get('fullName') or 'IIT Delhi customer')[:100],
+    'phone_e164':session['user']['phone'],'line_1':hostel['name']+' Hostel','line_2':'','landmark':'','city':'New Delhi','state':'Delhi','postal_code':'110016',
+    'country_code':'IN','is_default':bool(body.get('isDefault')) or not book,'hostel_id':hostel['id'],'hostel_name':hostel['name'],'room_number':room}
    if address['is_default']:
     for item in book:item['is_default']=False
    book.append(address);return self.json_out({'address':address},201)
+  if path=='/api/checkout/demo-order':
+   # The preview never implemented this, so a local checkout could never complete and the whole
+   # order -> deliver -> review journey was untestable. Mirrors server.mjs: build the order from
+   # the cart lines and the chosen hostel address, then hand it back placed and demo-paid.
+   session=self.require_customer()
+   if not session:return
+   book=ADDRESSES.get(session['user']['phone'],[])
+   address=next((a for a in book if a['id']==body.get('addressId')),None) or (book[0] if book else None)
+   if not address:return self.json_out({'error':'Select or save a delivery address before checkout.'},400)
+   lines=[];subtotal=0
+   for request in body.get('items',[])[:50]:
+    variant=None;product=None
+    for p in PRODUCTS:
+     variant=next((v for v in p['variants'] if v['id']==request.get('variantId')),None)
+     if variant:product=p;break
+    if not variant:return self.json_out({'error':'An item is unavailable.'},409)
+    qty=max(1,min(10,int(request.get('qty',1))))
+    if int(variant.get('stock',0))-int(variant.get('reserved',0))<qty:return self.json_out({'error':f"{product['name']} does not have {qty} left in {variant['size']}."},409)
+    unit=int(variant.get('priceOverride') or variant.get('price') or product['price']);subtotal+=unit*qty
+    variant['reserved']=int(variant.get('reserved',0))+qty
+    lines.append({'id':'item-'+secrets.token_hex(6),'productId':product['id'],'name':product['name'],'slug':product['slug'],'sku':variant['sku'],
+     'size':variant['size'],'color':variant['color'],'image':product['image'],'quantity':qty,'unitPrice':unit,
+     'deliveredAt':None,'reviewed':False,'customization':request.get('customization')})
+   if not lines:return self.json_out({'error':'Your bag is empty.'},400)
+   order={'id':'order-'+secrets.token_hex(6),'order_no':'IITD-'+secrets.token_hex(3).upper(),'customer_name':session['user'].get('fullName') or 'IIT Delhi customer',
+    'phone':session['user']['phone'],'hostel':address.get('hostel_name',''),'room_number':address.get('room_number',''),
+    'total':subtotal,'subtotal':subtotal,'order_status':'placed','payment_status':'demo_paid','fulfilment_status':'unfulfilled',
+    'created_at':datetime.now(timezone.utc).replace(microsecond=0).isoformat(),'delivered_at':None,'items':lines,'user_phone':session['user']['phone']}
+   ORDERS.insert(0,order)
+   return self.json_out({'order':order,'message':'Demo order placed.'},201)
   if path=='/api/admin/login':
    valid=bool(PREVIEW_ADMIN_PASSWORD) and hmac.compare_digest(str(body.get('email','')).lower(),PREVIEW_ADMIN_EMAIL.lower()) and hmac.compare_digest(str(body.get('password','')),PREVIEW_ADMIN_PASSWORD)
    if not valid:return self.json_out({'error':'Invalid administrator credentials.'},401)
