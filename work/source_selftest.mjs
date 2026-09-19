@@ -12,7 +12,7 @@ const workflow=fs.readFileSync(new URL('../.github/workflows/ci.yml',import.meta
 const packageJson=JSON.parse(fs.readFileSync(new URL('../package.json',import.meta.url),'utf8'));
 const migration=fs.readFileSync(new URL('../migrations/004_order_operations_colorways.sql',import.meta.url),'utf8');
 const mediaMigration=fs.readFileSync(new URL('../migrations/010_product_catalog_management.sql',import.meta.url),'utf8');
-const jerseyMigration=fs.readFileSync(new URL('../migrations/017_add_iit_delhi_01_jersey.sql',import.meta.url),'utf8');
+const jerseyRemoval=fs.readFileSync(new URL('../migrations/019_remove_iit_delhi_01_jersey.sql',import.meta.url),'utf8');
 const priceMigration=fs.readFileSync(new URL('../migrations/018_update_drop_prices.sql',import.meta.url),'utf8');
 
 for(const route of ['/api/admin/orders','/api/admin/orders/summary','/api/admin/orders/matrix','/api/admin/vendor-batches','/api/admin/products/:id/customization','/api/admin/products/:id/colorways','/api/admin/products/:id/media/upload','/api/admin/media/:id','/api/admin/products/:id/restore'])assert.ok(server.includes(route),`Missing ${route}`);
@@ -23,8 +23,9 @@ for(const selector of ['.orders-workspace','.orders-filterbar','.matrix-card','.
 assert.ok(client.includes('product.catalogItemId||product.id'),'Catalogue cards need stable colorway keys');
 assert.ok(server.includes('JOIN product_colorways cw ON cw.product_id=p.id AND cw.active AND cw.show_in_catalog'),'Public catalogue must expose one row per visible colourway');
 assert.ok(client.includes('colorway.id===product.colorwayId')&&client.includes('activeColorway?.name||colors'),'Catalogue cards must initialize and label their selected colourway');
-assert.ok(jerseyMigration.includes("'iit-delhi-01-jersey'")&&jerseyMigration.includes("'/media/iitd-jersey-front.jpg'")&&jerseyMigration.includes("'/media/iitd-jersey-back.jpg'"),'Jersey migration must add the product and two media sides');
-assert.ok(fs.existsSync(new URL('../data/product-media/iitd-jersey-front.jpg',import.meta.url))&&fs.existsSync(new URL('../data/product-media/iitd-jersey-back.jpg',import.meta.url)),'Jersey front and back assets must ship with the deployment');
+assert.ok(jerseyRemoval.includes("DELETE FROM products WHERE slug='iit-delhi-01-jersey'"),'Jersey must be deleted from the catalogue');
+assert.ok(jerseyRemoval.includes('UPDATE order_items')&&jerseyRemoval.includes('product_id=NULL'),'Jersey removal must detach order history rather than rewrite it');
+assert.ok(!fs.existsSync(new URL('../data/product-media/iitd-jersey-front.jpg',import.meta.url))&&!fs.existsSync(new URL('../data/product-media/iitd-jersey-back.jpg',import.meta.url)),'Jersey media must no longer ship with the deployment');
 assert.ok(server.includes("vbi.id IS NULL AND o.payment_status IN('paid','captured')"),'New-vendor eligibility must require payment');
 assert.ok(server.includes("'/home/data/product-media'"),'Azure App Service media must use persistent storage');
 assert.ok(server.includes("const packagedMediaRoot=path.join(root,'data','product-media')")&&server.includes('hasMediaFiles'),'Production media must fall back to packaged assets when persistent storage is empty');
@@ -38,9 +39,13 @@ assert.ok(client.includes('catalog-card-photos')&&client.includes("slice(0,2)"),
 assert.ok(client.includes('HOSTEL')&&client.includes('ROOM NUMBER'),'Delivery settings must use hostel and room number fields');
 assert.ok(!client.includes('googleMapsBrowserKey')&&!client.includes('Google Maps')&&!client.includes('mapsPlaceId'),'Client must not expose or load Google Maps credentials');
 assert.ok(client.includes('aria-pressed={activeColorway?.id===colorway.id}'),'Catalogue colour dots must expose active state');
-assert.ok(priceMigration.includes("slug='iit-delhi-01-jersey'")&&priceMigration.includes('base_price=59900')&&priceMigration.includes('compare_price=79900'),'Jersey price migration must set ₹599 with ₹799 compare price');
 assert.ok(priceMigration.includes("slug='dogra-drip'")&&priceMigration.includes('base_price=69900')&&priceMigration.includes('compare_price=79900'),'Dogra price migration must set ₹699 with ₹799 compare price');
-assert.ok(client.includes('catalog-add')&&client.includes('addToCart={add}'),'Catalogue cards must provide a direct add-to-cart action');
+assert.ok(client.includes('catalog-add')&&client.includes("'pick=size'"),'Catalogue add-to-bag must route to the product page size step');
+assert.ok(!client.includes('addToCart'),'Catalogue cards must not add to the bag before a size is chosen');
+assert.ok(client.includes('id="select-size"')&&client.includes("document.getElementById('select-size')?.scrollIntoView"),'Size-first redirect must scroll to the size block');
+assert.ok(client.includes('setTimeout(()=>setSizePrompt(false),5000)'),'Size prompt must clear itself after five seconds');
+assert.ok(client.includes('setSize(x);setSizePrompt(false)'),'Size prompt must let shoppers pick a size directly');
+assert.ok(styles.includes('.size-prompt{position:fixed')&&styles.includes('.size-prompt-sizes'),'Size prompt must ship themed styling');
 assert.ok(client.includes("api('/api/catalog?limit=100')")&&client.includes('activeVariants')&&client.includes('discontinued'),'Cart must reconcile discontinued products against the active catalogue');
 assert.ok(client.includes('onTouchStart={handleTouchStart}')&&client.includes('onTouchEnd={handleTouchEnd}')&&client.includes('moveGallery'),'Product gallery must support swipe navigation alongside buttons');
 assert.ok(client.includes('onClick={event=>selectColor(event,colorway)}'),'Catalogue colour dots must switch the card thumbnail');
