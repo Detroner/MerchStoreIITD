@@ -67,6 +67,16 @@ assert.ok(client.includes('rowSpan={order.items.length}'),'Order-level columns m
 assert.ok(client.includes("order.fulfilment_status==='delivered'?'ORDER DELIVERED'"),'A ticked order must read as delivered on the customer order page');
 assert.ok(client.includes("else if(event.target.tagName==='IMG')setZoomed(true)")&&styles.includes('.pdp-zoom-canvas'),'Tapping a product photo must zoom while swipes still navigate');
 assert.ok(client.includes('setShownPhoto(current=>(current+1)%photos.length)')&&styles.includes('.catalog-card-photos img.shown'),'Catalogue cards must cycle front and back rather than split the frame');
+assert.ok(server.includes("app.get('/api/admin/products/:id/variants'")&&server.includes("app.patch('/api/admin/variants/:id'"),'Stock desk needs its variant read and write');
+assert.ok(server.includes('INSERT INTO inventory_movements(variant_id,movement_type,quantity_delta,idempotency_key,reason)'),'Every stock change must be written to the ledger');
+assert.ok(server.includes('if(stock<current.reserved_stock)'),'Stock must never drop below units already reserved for paid orders');
+assert.ok(server.includes("app.post('/api/admin/products/:id/duplicate'")&&server.includes('stock_on_hand,active) VALUES($1,$2,$3,$4,$5,$6,0,$7)'),'Duplicating a product must copy its shape but not its stock');
+assert.ok(client.includes('function StudioVariants(')&&client.includes('<StudioVariants productId={current.id}'),'Studio products must expose the stock desk');
+assert.ok(styles.includes('.stock-table')&&styles.includes('.stock-low-banner'),'Stock desk needs its table and low-stock styling');
+assert.ok(client.includes('const quickStatus=async product=>')&&client.includes('const duplicate=async product=>'),'Product list needs publish and duplicate without opening the editor');
+assert.ok(client.includes('className="product-search"')&&client.includes('statusFilter'),'Product list must be searchable and filterable by status');
+assert.ok(client.includes('className="product-index-pick"'),'Product rows must separate selection from their quick actions');
+assert.ok(styles.includes('.catalog-art{height:min(96vw,470px)'),'Mobile product cards must use the shorter photo frame');
 assert.ok(client.includes("api('/api/catalog?limit=100')")&&client.includes('activeVariants')&&client.includes('discontinued'),'Cart must reconcile discontinued products against the active catalogue');
 assert.ok(client.includes('onTouchStart={handleTouchStart}')&&client.includes('onTouchEnd={handleTouchEnd}')&&client.includes('moveGallery'),'Product gallery must support swipe navigation alongside buttons');
 assert.ok(client.includes('onClick={event=>selectColor(event,colorway)}'),'Catalogue colour dots must switch the card thumbnail');

@@ -15,7 +15,7 @@ HOSTELS=[{'id':f'hostel-{i+1}','name':name} for i,name in enumerate(['Aravali','
 
 def make_variants(pid,apparel,price):
  sizes=['S','M','L','XL'] if apparel else ['One Size']; colors=['Navy','Cream'] if apparel else ['Campus Edition'];out=[]
- for i,(size,color) in enumerate((x,y) for x in sizes for y in colors):out.append({'id':f'variant-{pid}-{i+1}','sku':f'IITD-{pid.upper()}-{i+1:02d}','size':size,'color':color,'price':price,'stock':max(2,9-i),'active':True})
+ for i,(size,color) in enumerate((x,y) for x in sizes for y in colors):out.append({'id':f'variant-{pid}-{i+1}','sku':f'IITD-{pid.upper()}-{i+1:02d}','size':size,'color':color,'price':price,'stock':max(2,9-i),'reserved':2 if i==0 else 0,'active':True})
  return out
 def custom(enabled=True): return {'enabled':enabled,'label':'Name or nickname','min':1,'max':16,'placements':['Front chest','Back','Sleeve'],'styles':['Campus Block','Notebook Script'],'colors':['White','Red','Cobalt'],'surcharge':14900,'addedDays':2,'returnPolicy':'Customized items cannot be returned unless defective.'} if enabled else None
 PRODUCTS=[]
@@ -119,6 +119,17 @@ class Handler(BaseHTTPRequestHandler):
    session=self.require_customer()
    if not session:return
    return self.json_out({'addresses':ADDRESSES.get(session['user']['phone'],[])})
+  if path.startswith('/api/admin/products/') and path.endswith('/variants'):
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   pid=path.split('/')[4];product=next((p for p in PRODUCTS if p['id']==pid),None)
+   if not product:return self.json_out({'error':'Product not found.'},404)
+   names={c['id']:c['name'] for c in product.get('colorways',[])}
+   out=[]
+   for v in product['variants']:
+    reserved=int(v.get('reserved',0));on_hand=int(v.get('stock',0))
+    out.append({'id':v['id'],'sku':v['sku'],'size':v['size'],'color':v['color'],'colorwayId':v.get('colorwayId'),'colorwayName':names.get(v.get('colorwayId'),v['color']),'stockOnHand':on_hand,'reserved':reserved,'available':on_hand-reserved,'priceOverride':v.get('priceOverride'),'active':bool(v.get('active',True))})
+   return self.json_out({'variants':out})
   if path.startswith('/api/admin/orders') or path.startswith('/api/admin/vendor-batches'):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
@@ -259,6 +270,22 @@ class Handler(BaseHTTPRequestHandler):
    name=str(body.get('name','')).strip();slug=re.sub(r'[^a-z0-9]+','-',str(body.get('slug') or name).lower()).strip('-');sizes=[str(x).strip().upper() for x in body.get('sizes',[]) if str(x).strip()];category=next((x for x in CATEGORIES if x['id']==body.get('categoryId')),None);ptype=next((x for x in TYPES if x['id']==body.get('productTypeId')),None)
    if not name or not slug or not sizes or not category or not ptype:return self.json_out({'error':'Name, category, product type and sizes are required.'},400)
    pid='product-'+secrets.token_hex(5);color=str(body.get('colorName','Black'));cid='colorway-'+secrets.token_hex(5);price=int(body.get('basePrice',0));prefix=re.sub(r'[^A-Z0-9]+','-',str(body.get('skuPrefix') or name).upper()).strip('-');variants=[{'id':'variant-'+secrets.token_hex(5),'sku':f"{prefix}-{re.sub(r'[^A-Z0-9]+','-',color.upper())}-{size}",'size':size,'color':color,'colorwayId':cid,'price':price,'stock':int(body.get('stock',0)),'active':True} for size in sizes];colorway={'id':cid,'name':color,'slug':re.sub(r'[^a-z0-9]+','-',color.lower()).strip('-'),'swatch':body.get('swatch','#17171d'),'cardColor':body.get('cardColor','#163ea8'),'active':True,'showInCatalog':True,'sortOrder':0,'image':'/assets/merch-hero.png'};product={'id':pid,'name':name,'slug':slug,'category':category['name'],'categorySlug':category['slug'],'category_id':category['id'],'type':ptype['name'],'typeSlug':ptype['slug'],'product_type_id':ptype['id'],'short_description':str(body.get('shortDescription','')),'description':str(body.get('description','')),'price':price,'compare_price':int(body.get('comparePrice',0)),'badge':str(body.get('badge','')),'color':body.get('cardColor','#163ea8'),'image':'/assets/merch-hero.png','featured':bool(body.get('featured')),'customizable':bool(body.get('customizable')),'status':'draft','rating':0,'reviewCount':0,'variants':variants,'colorways':[colorway],'media':[],'customization':None,'sort_order':int(body.get('sortOrder',0)),'deleted_at':None};PRODUCTS.insert(0,product);return self.json_out({'product':product,'colorway':colorway,'variants':variants},201)
+  if path.startswith('/api/admin/products/') and path.endswith('/duplicate'):
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   pid=path.split('/')[4];source=next((p for p in PRODUCTS if p['id']==pid),None)
+   if not source:return self.json_out({'error':'Product not found.'},404)
+   stamp=secrets.token_hex(3);copy=json.loads(json.dumps(source))
+   copy['id']='product-'+secrets.token_hex(5);copy['name']=source['name']+' (copy)';copy['slug']=source['slug']+'-copy-'+stamp;copy['status']='draft';copy['featured']=False
+   remap={}
+   for cw in copy.get('colorways',[]):
+    old=cw['id'];cw['id']='colorway-'+secrets.token_hex(5);remap[old]=cw['id']
+   for v in copy['variants']:
+    v['id']='variant-'+secrets.token_hex(5);v['sku']=v['sku']+'-C'+stamp;v['stock']=0;v['reserved']=0
+    if v.get('colorwayId') in remap:v['colorwayId']=remap[v['colorwayId']]
+   copy['media']=[]
+   PRODUCTS.insert(0,copy)
+   return self.json_out({'product':copy,'colorways':len(copy.get('colorways',[])),'variants':len(copy['variants'])},201)
   if path.startswith('/api/admin/products/') and path.endswith('/restore'):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
@@ -319,6 +346,24 @@ class Handler(BaseHTTPRequestHandler):
    review=next((r for r in REVIEWS if r['id']==path.rsplit('/',1)[1]),None)
    if not review:return self.json_out({'error':'Review not found.'},404)
    review['status']=body.get('status','pending');return self.json_out({'ok':True})
+  if path.startswith('/api/admin/variants/'):
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   vid=path.rsplit('/',1)[1];found=None
+   for product in PRODUCTS:
+    for v in product['variants']:
+     if v['id']==vid:found=v
+   if not found:return self.json_out({'error':'Variant not found.'},404)
+   reserved=int(found.get('reserved',0))
+   if 'stock' in body:
+    stock=int(body['stock'])
+    if stock<0:return self.json_out({'error':'Stock must be a whole number of units.'},400)
+    if stock<reserved:return self.json_out({'error':str(reserved)+' unit(s) are already reserved for paid orders, so stock cannot go below that.'},409)
+    found['stock']=stock
+   if 'priceOverride' in body:found['priceOverride']=None if body['priceOverride'] in (None,'') else int(body['priceOverride'])
+   if 'active' in body:found['active']=bool(body['active'])
+   on_hand=int(found.get('stock',0))
+   return self.json_out({'variant':{'id':found['id'],'sku':found['sku'],'size':found['size'],'color':found['color'],'colorwayId':found.get('colorwayId'),'stockOnHand':on_hand,'reserved':reserved,'available':on_hand-reserved,'priceOverride':found.get('priceOverride'),'active':bool(found.get('active',True))}})
   if path.startswith('/api/admin/products/') and path.endswith('/customization'):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
