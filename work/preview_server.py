@@ -14,8 +14,7 @@ TYPES=[{'id':'type-tee','name':'T-shirt','slug':'t-shirt'},{'id':'type-hoodie','
 PREVIEW_SMS_PROVIDER=os.environ.get('SMS_PROVIDER','demo').lower()
 def sms_status():
  widget=PREVIEW_SMS_PROVIDER=='msg91-widget'
- return {'provider':PREVIEW_SMS_PROVIDER,'configured':widget and bool(os.environ.get('MSG91_WIDGET_ID') and os.environ.get('MSG91_WIDGET_TOKEN')),
-  'demoAllowed':not widget,'widgetId':os.environ.get('MSG91_WIDGET_ID','') if widget else '','widgetToken':os.environ.get('MSG91_WIDGET_TOKEN','') if widget else ''}
+ return {'provider':PREVIEW_SMS_PROVIDER,'configured':widget and bool(os.environ.get('MSG91_WIDGET_ID')),'demoAllowed':not widget}
 HOSTELS=[{'id':f'hostel-{i+1}','name':name} for i,name in enumerate(['Aravali','Girnar','Himadri','Jwalamukhi','Kailash','Karakoram','Kumaon','Nilgiri','Satpura','Shivalik','Udaigiri','Vindhyachal','Zanskar'])]
 
 def make_variants(pid,apparel,price):
