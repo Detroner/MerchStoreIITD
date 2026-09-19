@@ -1,4 +1,5 @@
 import json, secrets, hmac, hashlib, mimetypes, re
+from datetime import datetime, timezone
 import os
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
@@ -44,12 +45,17 @@ for product in PRODUCTS:
   for variant in product['variants']:
    if variant['color']==name:variant['colorwayId']=cid
  product.update({'category_id':next((x['id'] for x in CATEGORIES if x['slug']==product['categorySlug']),''),'product_type_id':next((x['id'] for x in TYPES if x['slug']==product['typeSlug']),''),'short_description':product['description'][:120],'sort_order':len(PRODUCTS),'deleted_at':None})
- product['media']=[{'id':f"media-{product['id']}-1",'url':product['image'],'type':'image','mimeType':'image/png','fileSize':None,'poster':None,'alt':product['name'],'sortOrder':0,'colorwayId':None,'active':True}]
+ CARD_SHOTS=['/media/ed6636b7-1669-4dcd-9f8d-8af7a65d7775.webp','/media/208cba41-36df-408b-9683-01dc156dedc3.webp']
+ product['media']=[{'id':f"media-{product['id']}-{cw['id']}-{n+1}",'url':CARD_SHOTS[n],'type':'image','mimeType':'image/webp','fileSize':None,'poster':None,'alt':f"{product['name']} {'back' if n else 'front'}",'sortOrder':n,'colorwayId':cw['id'],'active':True,'isThumbnail':n==0} for cw in product['colorways'] for n in (0,1)]
 
 REVIEWS=[{'id':'review-1','product_id':'hood','rating':5,'title':'Feels properly premium','body':'The weight is perfect for winter mornings and the fit is relaxed without looking oversized. The embroidery stayed sharp after washing.','status':'approved','full_name':'Ananya S.','submitted_at':'2026-08-07T10:00:00Z'},{'id':'review-2','product_id':'hood','rating':4,'title':'A new late-lab uniform','body':'Warm, comfortable and the pockets are actually useful. I sized up for a roomier fit.','status':'approved','full_name':'Kabir M.','submitted_at':'2026-08-05T10:00:00Z'},{'id':'review-3','product_id':'tee','rating':5,'title':'The graphic lands','body':'Soft fabric and a clean print. Looks even better in person.','status':'pending','full_name':'Rhea A.','submitted_at':'2026-08-09T10:00:00Z'}]
 USERS={};SESSIONS={};OTP={};ADMIN_SESSIONS=set();ADDRESSES={}
 DEMO_ITEMS=[{'id':'demo-item-1','productId':'hood','name':'Core Memory Hoodie','slug':'core-memory-hoodie','sku':'IITD-HOOD-02','size':'M','color':'Navy','image':'/assets/merch-hero.png','quantity':1,'unitPrice':249900,'deliveredAt':'2026-08-06T12:00:00Z','reviewed':False,'customization':{'text':'TANISH','placement':'Front chest','style':'Campus Block','color':'White'}},{'id':'demo-item-2','productId':'tee','name':'Main Building Tee','slug':'main-building-tee','sku':'IITD-TEE-03','size':'L','color':'Navy','image':'/assets/merch-hero.png','quantity':1,'unitPrice':99900,'deliveredAt':None,'reviewed':False,'customization':None}]
 ORDERS=[{'id':'order-1','order_no':'IITD-2048','customer_name':'Demo Customer','total':364700,'order_status':'delivered','fulfilment_status':'delivered','created_at':'2026-08-02T09:40:00Z','items':DEMO_ITEMS}]
+ORDERS[0].update({'phone':'+919876500011','hostel':'Nilgiri','room_number':'118','payment_status':'paid','delivered_at':'2026-08-06T12:00:00Z'})
+PENDING_ITEMS=[{'id':'demo-item-3','productId':'tee','name':'Main Building Tee','slug':'main-building-tee','sku':'IITD-TEE-05','size':'M','color':'Cream','image':'/assets/merch-hero.png','quantity':2,'unitPrice':99900,'deliveredAt':None,'reviewed':False,'customization':None},{'id':'demo-item-4','productId':'cap','name':'Red Brick Cap','slug':'red-brick-cap','sku':'IITD-CAP-01','size':'One Size','color':'Campus Edition','image':'/assets/merch-hero.png','quantity':1,'unitPrice':69900,'deliveredAt':None,'reviewed':False,'customization':None}]
+ORDERS.append({'id':'order-2','order_no':'IITD-2049','customer_name':'Aarav Sharma','phone':'+919812345678','hostel':'Karakoram','room_number':'112','payment_status':'paid','total':269700,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-14T11:20:00Z','items':PENDING_ITEMS})
+ORDERS.append({'id':'order-3','order_no':'IITD-2050','customer_name':'Meera Iyer','phone':'+919845612300','hostel':'Himadri','room_number':'304','payment_status':'pending','total':59900,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-17T18:05:00Z','items':[{'id':'demo-item-5','productId':'tote','name':'Hauz Khas Tote','slug':'hauz-khas-tote','sku':'IITD-TOTE-01','size':'One Size','color':'Campus Edition','image':'/assets/merch-hero.png','quantity':1,'unitPrice':59900,'deliveredAt':None,'reviewed':False,'customization':None}]})
 COUPONS=[{'id':'coupon-1','code':'CAMPUS10','type':'percentage','value':10,'min_order':99900,'usage_limit':500,'used_count':84,'active':True},{'id':'coupon-2','code':'FREESHIP','type':'free_shipping','value':0,'min_order':49900,'usage_limit':250,'used_count':41,'active':False}]
 BATCHES=[]
 
@@ -126,6 +132,16 @@ class Handler(BaseHTTPRequestHandler):
       if not row:row={'product_name':item['name'],'color':item['color'],'size':item['size'],'sku':item['sku'],'units':0,'orders':0,'customized_units':0,'new_vendor_units':0,'pending_vendor_units':0};matrix.append(row)
       row['units']+=item['quantity'];row['orders']+=1;row['new_vendor_units']+=item['quantity'];row['customized_units']+=item['quantity'] if item.get('customization') else 0
     return self.json_out({'rows':matrix})
+   if path=='/api/admin/orders/fulfilment':
+    def shape(order):
+     paid_state=order.get('payment_status','paid')
+     return {'orderId':order['id'],'orderNo':order['order_no'],'orderedAt':order['created_at'],'total':order['total'],
+      'paymentStatus':paid_state,'paid':paid_state in ('paid','captured','demo_paid'),
+      'hostel':order.get('hostel',''),'roomNumber':order.get('room_number',''),
+      'username':order.get('customer_name',''),'phone':order.get('phone',''),'deliveredAt':order.get('delivered_at'),
+      'items':[{'id':i['id'],'name':i['name'],'color':i['color'],'size':i['size'],'quantity':i['quantity'],'lineTotal':i['unitPrice']*i['quantity']} for i in order['items']]}
+    done=lambda o:o.get('fulfilment_status')=='delivered'
+    return self.json_out({'pending':[shape(o) for o in ORDERS if not done(o)],'delivered':[shape(o) for o in ORDERS if done(o)]})
    if path=='/api/admin/orders':return self.json_out({'items':ORDERS,'nextCursor':None})
    if path.startswith('/api/admin/orders/'):
     order=next((o for o in ORDERS if o['id']==path.rsplit('/',1)[1]),None)
@@ -150,7 +166,8 @@ class Handler(BaseHTTPRequestHandler):
      if row:row['units']+=item['quantity'];row['orders']+=1
      else:breakdown.append({'product_name':item['name'],'color':item['color'],'size':item['size'],'sku':item['sku'],'units':item['quantity'],'orders':1,'customized_units':item['quantity'] if item.get('customization') else 0})
    mode=os.environ.get('RAZORPAY_MODE','demo');configured=mode in ['test','live'] and bool(os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'));return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':COUPONS,'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':mode,'configured':configured,'live':configured,'keyId':os.environ.get('RAZORPAY_KEY_ID','') if configured else '','webhookConfigured':bool(os.environ.get('RAZORPAY_WEBHOOK_SECRET')),'database':'PostgreSQL'},'sms':{'provider':os.environ.get('SMS_PROVIDER','demo'),'configured':False}})
-  if path.startswith('/assets/'):file=ROOT/'public'/path.lstrip('/')
+  if path.startswith('/media/'):file=ROOT/'data'/'product-media'/path.split('/')[-1]
+  elif path.startswith('/assets/'):file=ROOT/'public'/path.lstrip('/')
   else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login'] or path.startswith('/products/') else path.lstrip('/'))
   if file.is_file():
    payload=file.read_bytes();self.send_response(200);self.send_header('Content-Type',mimetypes.guess_type(file)[0] or 'application/octet-stream');self.send_header('Content-Length',len(payload));self.end_headers();return self.wfile.write(payload)
@@ -330,6 +347,16 @@ class Handler(BaseHTTPRequestHandler):
      if 'sortOrder' in body:item['sortOrder']=max(0,int(body['sortOrder']))
      return self.json_out({'media':item})
    return self.json_out({'error':'Media not found.'},404)
+  if path.startswith('/api/admin/orders/') and path.endswith('/delivered'):
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   oid=path.split('/')[4];order=next((o for o in ORDERS if o['id']==oid),None)
+   if not order:return self.json_out({'error':'Order not found.'},404)
+   flag=body.get('delivered') is True or body.get('delivered')=='true'
+   order['fulfilment_status']='delivered' if flag else 'dispatched'
+   order['delivered_at']=datetime.now(timezone.utc).replace(microsecond=0).isoformat() if flag else None
+   for item in order['items']:item['deliveredAt']=order['delivered_at']
+   return self.json_out({'ok':True,'delivered':flag})
   if path.startswith('/api/admin/orders/') and path.endswith('/status'):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
