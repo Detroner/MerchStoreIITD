@@ -152,6 +152,16 @@ assert.ok(client.includes('SIGN-IN NOT CONFIGURED'),'Production sign-in must fai
 assert.ok(client.includes('htmlFor="studio-email"')&&client.includes('autoComplete="current-password"'),'Studio credentials must have accessible labels and autofill semantics');
 assert.ok(server.includes("const demoAllowed=()=>!production")&&server.includes("provider==='demo'&&!demoAllowed()"),'Production demo OTP must be rejected');
 assert.ok(server.includes("url.searchParams.set('mobile',msg91Mobile(mobile))"),'MSG91 must receive plain country-code digits, not a percent-encoded +');
+assert.ok(server.includes("app.post('/api/auth/widget/session'")&&server.includes('api.msg91.com/api/v5/widget/verifyAccessToken'),'Widget sign-in must exchange the access token server-side');
+// scoped to the widget handler: req.body.phone is legitimate in the OTP request path
+const widgetHandler=server.slice(server.indexOf("app.post('/api/auth/widget/session'"),server.indexOf("app.post('/api/auth/logout'"));
+assert.ok(widgetHandler.includes('msg91WidgetIdentifier(accessToken)')&&!/req\.body[^;]{0,80}phone/.test(widgetHandler),'Widget sign-in must take the number from MSG91, never from the request body');
+assert.ok(server.includes('async function establishCustomerSession'),'OTP and widget sign-in must share one session factory');
+// scoped to the payload builder: the authkey is used server-side elsewhere and must stay there
+const smsPayload=server.slice(server.indexOf('const smsStatus=()=>'),server.indexOf('const smsStatus=()=>')+520);
+assert.ok(smsPayload.includes('MSG91_WIDGET_ID')&&smsPayload.includes('MSG91_WIDGET_TOKEN')&&!smsPayload.includes('MSG91_AUTHKEY'),'Only the widget id and public token may reach the browser');
+assert.ok(client.includes('verify.msg91.com/otp-provider.js')&&client.includes('exposeMethods:true'),'Login must drive the widget through its exposed methods to keep the site UI');
+assert.ok(client.includes("api('/api/auth/widget/session'"),'Verified widget tokens must be exchanged for a session');
 assert.ok(server.includes('const adminConsoleEnabled=()=>!production')&&server.includes("if(!adminConsoleEnabled())return res.status(503)"),'Production Studio must remain disabled until explicitly enabled');
 assert.ok(client.includes('Administrator access')&&client.includes('Use the administrator credentials configured for this deployment.'),'Studio must explain how to authenticate');
 assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.includes("if(!demoAllowed())return res.status(503)"),'Production demo checkout must be rejected before settlement');

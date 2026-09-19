@@ -11,6 +11,11 @@ PREVIEW_ADMIN_PASSWORD=os.environ.get('ADMIN_PREVIEW_PASSWORD','')
 SETTINGS={'brand':'THE IIT DELHI DROP','eyebrow':'CAMPUS GOODS / EST. 2026','headline':'BIG BRAINS.\nBIGGER FITS.','subhead':'Campus-made merchandise for the curious, sleep-deprived and world-changing.','announcement':'FREE SHIPPING ABOVE ₹1,499 ✦ FRESH DROP IS LIVE ✦ MADE FOR CAMPUS','primary':'#ed3b24','secondary':'#163ea8','accent':'#f5ce3e','background':'#f4eddf','ink':'#17171d','radius':'20','motion':'1','motionIntensity':'1','motionPreset':'campus-pop','heroImage':'/assets/merch-hero.png?v=20260919','heroButton':'EXPLORE THE DROP','storyTitle':'Made of red brick & big ideas.','storyBody':'Designed for the people who turn impossible questions into everyday conversations.','footerNote':'Designed on campus. Worn everywhere.'}
 CATEGORIES=[{'id':'cat-apparel','name':'Apparel','slug':'apparel'},{'id':'cat-accessories','name':'Accessories','slug':'accessories'},{'id':'cat-home','name':'Home','slug':'home'},{'id':'cat-stationery','name':'Stationery','slug':'stationery'}]
 TYPES=[{'id':'type-tee','name':'T-shirt','slug':'t-shirt'},{'id':'type-hoodie','name':'Hoodie','slug':'hoodie'},{'id':'type-track','name':'Trackpants','slug':'trackpants'},{'id':'type-cap','name':'Cap','slug':'cap'},{'id':'type-bag','name':'Bag','slug':'bag'},{'id':'type-mug','name':'Mug','slug':'mug'},{'id':'type-stationery','name':'Stationery','slug':'stationery'}]
+PREVIEW_SMS_PROVIDER=os.environ.get('SMS_PROVIDER','demo').lower()
+def sms_status():
+ widget=PREVIEW_SMS_PROVIDER=='msg91-widget'
+ return {'provider':PREVIEW_SMS_PROVIDER,'configured':widget and bool(os.environ.get('MSG91_WIDGET_ID') and os.environ.get('MSG91_WIDGET_TOKEN')),
+  'demoAllowed':not widget,'widgetId':os.environ.get('MSG91_WIDGET_ID','') if widget else '','widgetToken':os.environ.get('MSG91_WIDGET_TOKEN','') if widget else ''}
 HOSTELS=[{'id':f'hostel-{i+1}','name':name} for i,name in enumerate(['Aravali','Girnar','Himadri','Jwalamukhi','Kailash','Karakoram','Kumaon','Nilgiri','Satpura','Shivalik','Udaigiri','Vindhyachal','Zanskar'])]
 
 def make_variants(pid,apparel,price):
@@ -82,7 +87,7 @@ class Handler(BaseHTTPRequestHandler):
   return session
  def do_GET(self):
   parsed=urlparse(self.path);path=parsed.path;params={k:v[0] for k,v in parse_qs(parsed.query).items()}
-  if path=='/api/store':return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True},'sms':{'provider':'demo','configured':False,'demoAllowed':True}})
+  if path=='/api/store':return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True},'sms':sms_status()})
   if path=='/api/catalog':
    try:
     items=[]
