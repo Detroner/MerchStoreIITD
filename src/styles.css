@@ -189,3 +189,24 @@
   .mobile-bag-link:hover{background:#ffffff20}
   .mobile-bag-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 }
+.coupon-editor{padding:24px 0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin-bottom:28px}
+.coupon-editor h2{font-size:20px;margin:0 0 18px;letter-spacing:0}
+.coupon-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.coupon-fields label{display:grid;gap:8px;font-size:10px;font-weight:700;letter-spacing:0;min-width:0}
+.coupon-fields input,.coupon-fields select{width:100%;min-width:0;height:42px;border:1px solid #aaa;background:#fff;padding:8px;font:400 14px 'DM Sans';color:#17171d}
+.coupon-editor-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px}
+.coupon-editor-actions>label{display:flex;align-items:center;gap:8px;font-size:13px}
+.coupon-editor-actions button{min-height:40px;border:1px solid #17171d;background:#17171d;color:#fff;padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700}
+.coupon-editor-actions button[type=button]{background:#fff;color:#17171d}
+.promotions-page .coupon-list article{gap:20px}
+.promotions-page .coupon-list article>div{min-width:0}
+.promotions-page .coupon-list h2,.promotions-page .coupon-list p{overflow-wrap:anywhere;letter-spacing:0}
+.coupon-row-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.coupon-row-actions button{min-width:40px;min-height:40px}
+.order-summary .coupon-entry{display:block}
+.coupon-input-row{display:flex;gap:8px;min-width:0}
+.coupon-input-row input{flex:1;min-width:0;width:0}
+.coupon-input-row button{flex:0 0 auto;min-height:44px;min-width:44px;border:1px solid var(--ink);background:var(--accent);color:var(--ink);padding:8px;font-weight:700}
+.coupon-applied{font-size:12px;font-weight:700;color:var(--accent);margin:10px 0 0}
+@media(max-width:760px){.coupon-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.promotions-page .coupon-list article{display:block}.coupon-row-actions{justify-content:flex-start}.promotions-page .coupon-list article>div+div{margin-top:16px;text-align:left}}
+@media(max-width:420px){.coupon-fields{grid-template-columns:minmax(0,1fr)}}

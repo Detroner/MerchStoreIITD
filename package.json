@@ -9,7 +9,7 @@
     "dev": "node --env-file=.env server.mjs",
     "start": "node --env-file=.env server.mjs",
     "db:migrate": "node scripts/migrate.mjs",
-    "check": "node --check server.mjs && node work/source_selftest.mjs"
+    "check": "node --check server.mjs && node work/source_selftest.mjs && node --test work/coupons.test.mjs"
   },
   "dependencies": {
     "argon2": "0.44.0",

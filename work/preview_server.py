@@ -62,6 +62,17 @@ PENDING_ITEMS=[{'id':'demo-item-3','productId':'tee','name':'Main Building Tee',
 ORDERS.append({'id':'order-2','order_no':'IITD-2049','customer_name':'Aarav Sharma','phone':'+919812345678','hostel':'Karakoram','room_number':'112','payment_status':'paid','total':269700,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-14T11:20:00Z','items':PENDING_ITEMS})
 ORDERS.append({'id':'order-3','order_no':'IITD-2050','customer_name':'Meera Iyer','phone':'+919845612300','hostel':'Himadri','room_number':'304','payment_status':'pending','total':59900,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-17T18:05:00Z','items':[{'id':'demo-item-5','productId':'tote','name':'Hauz Khas Tote','slug':'hauz-khas-tote','sku':'IITD-TOTE-01','size':'One Size','color':'Campus Edition','image':'/assets/merch-hero.png','quantity':1,'unitPrice':59900,'deliveredAt':None,'reviewed':False,'customization':None}]})
 COUPONS=[{'id':'coupon-1','code':'CAMPUS10','type':'percentage','value':10,'min_order':99900,'usage_limit':500,'used_count':84,'active':True},{'id':'coupon-2','code':'FREESHIP','type':'free_shipping','value':0,'min_order':49900,'usage_limit':250,'used_count':41,'active':False}]
+def preview_coupon(code,subtotal):
+ if not str(code or '').strip():return {'discount':0,'couponCode':None,'couponId':None}
+ row=next((c for c in COUPONS if c['code']==str(code).strip().upper()),None)
+ if not row or not row['active'] or row.get('deleted_at'):raise ValueError('This coupon is not active.')
+ now=datetime.now(timezone.utc)
+ if row.get('starts_at') and datetime.fromisoformat(row['starts_at'].replace('Z','+00:00'))>now:raise ValueError('This coupon is not active yet.')
+ if row.get('ends_at') and datetime.fromisoformat(row['ends_at'].replace('Z','+00:00'))<=now:raise ValueError('This coupon has expired.')
+ if subtotal<row['min_order']:raise ValueError('Minimum purchase for this coupon is INR %.2f.'%(row['min_order']/100))
+ if row.get('usage_limit',0)>0 and row['used_count']>=row['usage_limit']:raise ValueError('This coupon has reached its redemption limit.')
+ discount=subtotal*row['value']//100 if row['type']=='percentage' else row['value'] if row['type']=='fixed' else 0
+ return {'discount':min(subtotal,discount,row['max_discount'] if row.get('max_discount') is not None else subtotal),'couponCode':row['code'],'couponId':row['id']}
 BATCHES=[]
 
 def get_product(slug): return next((p for p in PRODUCTS if p['slug']==slug),None)
@@ -185,15 +196,48 @@ class Handler(BaseHTTPRequestHandler):
      row=next((x for x in breakdown if x['product_name']==item['name'] and x['size']==item['size']),None)
      if row:row['units']+=item['quantity'];row['orders']+=1
      else:breakdown.append({'product_name':item['name'],'color':item['color'],'size':item['size'],'sku':item['sku'],'units':item['quantity'],'orders':1,'customized_units':item['quantity'] if item.get('customization') else 0})
-   mode=os.environ.get('RAZORPAY_MODE','demo');configured=mode in ['test','live'] and bool(os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'));return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':COUPONS,'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':mode,'configured':configured,'live':configured,'keyId':os.environ.get('RAZORPAY_KEY_ID','') if configured else '','webhookConfigured':bool(os.environ.get('RAZORPAY_WEBHOOK_SECRET')),'database':'PostgreSQL'},'sms':{'provider':os.environ.get('SMS_PROVIDER','demo'),'configured':False}})
+   mode=os.environ.get('RAZORPAY_MODE','demo');configured=mode in ['test','live'] and bool(os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'));return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':[c for c in COUPONS if not c.get('deleted_at')],'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':mode,'configured':configured,'live':configured,'keyId':os.environ.get('RAZORPAY_KEY_ID','') if configured else '','webhookConfigured':bool(os.environ.get('RAZORPAY_WEBHOOK_SECRET')),'database':'PostgreSQL'},'sms':{'provider':os.environ.get('SMS_PROVIDER','demo'),'configured':False}})
   if path.startswith('/media/'):file=ROOT/'data'/'product-media'/path.split('/')[-1]
   elif path.startswith('/assets/'):file=ROOT/'public'/path.lstrip('/')
   else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login','/terms','/privacy','/shipping','/contact'] or path.startswith('/products/') else path.lstrip('/'))
   if file.is_file():
    payload=file.read_bytes();self.send_response(200);self.send_header('Content-Type',mimetypes.guess_type(file)[0] or 'application/octet-stream');self.send_header('Content-Length',len(payload));self.end_headers();return self.wfile.write(payload)
   self.send_error(404)
+ def manage_coupon(self,path,body=None):
+  token=cookie_value(self.headers,'admin_session')
+  if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+  row=None if self.command=='POST' else next((c for c in COUPONS if c['id']==path.rsplit('/',1)[1] and not c.get('deleted_at')),None)
+  if self.command!='POST' and not row:return self.json_out({'error':'Coupon not found.'},404)
+  if self.command=='DELETE':
+   row['active']=False;row['deleted_at']=datetime.now(timezone.utc).isoformat();return self.json_out({'ok':True})
+  try:
+   data={'code':'','type':'percentage','value':10,'min_order':0,'max_discount':None,'starts_at':None,'ends_at':None,'active':True,'usage_limit':0,'per_customer_limit':0,**(row or {}),**body}
+   data['code']=str(data['code']).strip().upper()
+   if not re.fullmatch(r'[A-Z0-9_-]{2,40}',data['code']):raise ValueError()
+   if data['type'] not in ['percentage','fixed','free_shipping']:raise ValueError()
+   for field in ['value','min_order','max_discount']:
+    value=data[field]
+    if field=='max_discount' and value in [None,'']:data[field]=None;continue
+    if isinstance(value,bool) or float(value)!=int(value) or int(value)<0:raise ValueError()
+    data[field]=int(value)
+   if data['max_discount'] is not None and data['max_discount']<=0:raise ValueError()
+   if data['type']=='percentage' and not 1<=data['value']<=100:raise ValueError()
+   for field in ['starts_at','ends_at']:
+    if data[field]:
+     stamp=datetime.fromisoformat(data[field].replace('Z','+00:00'))
+     if stamp.tzinfo is None:raise ValueError()
+     data[field]=stamp.isoformat()
+    else:data[field]=None
+   if data['starts_at'] and data['ends_at'] and datetime.fromisoformat(data['starts_at'])>=datetime.fromisoformat(data['ends_at']):raise ValueError()
+   if any(c['code']==data['code'] and c is not row for c in COUPONS):return self.json_out({'error':'This coupon code already exists.'},409)
+   if row:row.update(data)
+   else:
+    row={**data,'id':secrets.token_hex(16),'used_count':0};COUPONS.append(row)
+   return self.json_out({'coupon':row},201 if self.command=='POST' else 200)
+  except (ValueError,TypeError,OverflowError):return self.json_out({'error':'Check the coupon amounts and schedule.'},400)
  def do_POST(self):
   path=urlparse(self.path).path
+  if path=='/api/admin/coupons':return self.manage_coupon(path,self.body())
   if path.startswith('/api/admin/products/') and path.endswith('/media/upload'):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
@@ -250,7 +294,9 @@ class Handler(BaseHTTPRequestHandler):
      surcharge=0
     subtotal+=variant['price']*qty;custom_total+=surcharge*qty;items.append({'variantId':variant['id'],'name':product['name'],'quantity':qty,'unitPrice':variant['price'],'customization':customization,'customizationSurcharge':surcharge})
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
-   shipping=0;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True}})
+   try:coupon=preview_coupon(body.get('couponCode'),subtotal+custom_total)
+   except ValueError as error:return self.json_out({'error':str(error)},400)
+   shipping=0;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,**coupon,'shipping':shipping,'total':subtotal+custom_total+shipping-coupon['discount'],'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True}})
   if path=='/api/reviews':
    if not self.require_customer():return
    text=str(body.get('body','')).strip()
@@ -284,7 +330,7 @@ class Handler(BaseHTTPRequestHandler):
    book=ADDRESSES.get(session['user']['phone'],[])
    address=next((a for a in book if a['id']==body.get('addressId')),None) or (book[0] if book else None)
    if not address:return self.json_out({'error':'Select or save a delivery address before checkout.'},400)
-   lines=[];subtotal=0
+   lines=[];subtotal=0;pending=[]
    for request in body.get('items',[])[:50]:
     variant=None;product=None
     for p in PRODUCTS:
@@ -294,14 +340,19 @@ class Handler(BaseHTTPRequestHandler):
     qty=max(1,min(10,int(request.get('qty',1))))
     if int(variant.get('stock',0))-int(variant.get('reserved',0))<qty:return self.json_out({'error':f"{product['name']} does not have {qty} left in {variant['size']}."},409)
     unit=int(variant.get('priceOverride') or variant.get('price') or product['price']);subtotal+=unit*qty
-    variant['reserved']=int(variant.get('reserved',0))+qty
+    pending.append((variant,qty))
     lines.append({'id':'item-'+secrets.token_hex(6),'productId':product['id'],'name':product['name'],'slug':product['slug'],'sku':variant['sku'],
      'size':variant['size'],'color':variant['color'],'image':product['image'],'quantity':qty,'unitPrice':unit,
      'deliveredAt':None,'reviewed':False,'customization':request.get('customization')})
    if not lines:return self.json_out({'error':'Your bag is empty.'},400)
+   try:coupon=preview_coupon(body.get('couponCode'),subtotal)
+   except ValueError as error:return self.json_out({'error':str(error)},400)
+   for variant,qty in pending:variant['reserved']=int(variant.get('reserved',0))+qty
+   if coupon['couponId']:
+    matched=next(c for c in COUPONS if c['id']==coupon['couponId']);matched['used_count']+=1
    order={'id':'order-'+secrets.token_hex(6),'order_no':'IITD-'+secrets.token_hex(3).upper(),'customer_name':session['user'].get('fullName') or 'IIT Delhi customer',
     'phone':session['user']['phone'],'hostel':address.get('hostel_name',''),'room_number':address.get('room_number',''),
-    'total':subtotal,'subtotal':subtotal,'order_status':'placed','payment_status':'demo_paid','fulfilment_status':'unfulfilled',
+    'total':subtotal-coupon['discount'],'subtotal':subtotal,'discount':coupon['discount'],'order_status':'placed','payment_status':'demo_paid','fulfilment_status':'unfulfilled',
     'created_at':datetime.now(timezone.utc).replace(microsecond=0).isoformat(),'delivered_at':None,'items':lines,'user_phone':session['user']['phone']}
    ORDERS.insert(0,order)
    return self.json_out({'order':order,'message':'Demo order placed.'},201)
@@ -354,6 +405,7 @@ class Handler(BaseHTTPRequestHandler):
   self.send_error(404)
  def do_DELETE(self):
   parsed=urlparse(self.path);path=parsed.path;params=parse_qs(parsed.query)
+  if path.startswith('/api/admin/coupons/'):return self.manage_coupon(path)
   if path.startswith('/api/account/addresses/'):
    session=self.require_customer()
    if not session:return
@@ -378,6 +430,7 @@ class Handler(BaseHTTPRequestHandler):
   self.send_error(404)
  def do_PATCH(self):
   path=urlparse(self.path).path;body=self.body()
+  if path.startswith('/api/admin/coupons/'):return self.manage_coupon(path,body)
   if path=='/api/account/profile':
    session=self.require_customer()
    if not session:return
