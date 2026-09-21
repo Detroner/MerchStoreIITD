@@ -167,6 +167,11 @@ assert.ok(client.includes("SUPPORT_EMAIL='iitdelhidrop@gmail.com'"),'Support add
 assert.ok(client.includes('className="footer-policies"')&&client.includes('href="/terms"')&&client.includes('href="/privacy"'),'Policy pages must be reachable from the footer');
 assert.ok(!client.includes('· PRIVACY · TERMS · RETURNS'),'The footer must link its policies rather than name them as plain text');
 assert.ok(client.includes('not an official store of'),'Policies must state the store is not an official IIT Delhi store');
+assert.ok(client.includes('const SIZE_CHART=')&&client.includes("['XXL',50,29.5,24,10.5]"),'Size chart must carry the published measurements');
+assert.ok(client.includes('onClick={()=>setSizeGuide(true)}')&&styles.includes('.size-guide-backdrop'),'The size guide link must open a chart');
+assert.ok(client.includes("row[0]===size?'is-yours'")&&styles.includes('.size-guide tr.is-yours td'),'The chart must highlight the size the shopper has selected');
+assert.ok(client.includes('onClick={event=>event.stopPropagation()}'),'Clicking inside the chart must not dismiss it');
+assert.ok(!styles.includes("text-decoration:underline;font-size:8px"),'The size guide link must not stay at the old 8px');
 assert.ok(server.includes('const adminConsoleEnabled=()=>!production')&&server.includes("if(!adminConsoleEnabled())return res.status(503)"),'Production Studio must remain disabled until explicitly enabled');
 assert.ok(client.includes('Administrator access')&&client.includes('Use the administrator credentials configured for this deployment.'),'Studio must explain how to authenticate');
 assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.includes("if(!demoAllowed())return res.status(503)"),'Production demo checkout must be rejected before settlement');
