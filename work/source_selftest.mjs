@@ -161,8 +161,15 @@ assert.ok(!/otp-provider\.js|tokenAuth|initSendOTP/.test(client),'The client mus
 assert.ok(server.includes('provider_ref')&&fs.readFileSync(new URL('../migrations/023_otp_provider_reference.sql',import.meta.url),'utf8').includes('provider_ref'),'The widget reqId must be stored against the challenge, not the browser');
 assert.ok(server.includes('msg91WidgetVerify(challenge.provider_ref'),'Verification must quote the stored reqId, so the number is the one we sent to');
 // Razorpay will not activate an account whose site lacks these pages, so they are contract, not decoration.
-for(const page of ['terms','privacy','refund','shipping','contact'])assert.ok(client.includes(`${page}:{kicker:`),`Missing the ${page} policy page`);
-for(const route of ['/terms','/privacy','/refund','/shipping','/contact'])assert.ok(server.includes(`'${route}'`),`SPA must serve ${route}`);
+for(const page of ['terms','privacy','shipping','contact'])assert.ok(client.includes(`${page}:{kicker:`),`Missing the ${page} policy page`);
+for(const route of ['/terms','/privacy','/shipping','/contact'])assert.ok(server.includes(`'${route}'`),`SPA must serve ${route}`);
+assert.ok(!client.includes("refund:{kicker:")&&!server.includes("'/refund'"),'The cancellations page must be gone');
+assert.ok(client.includes('const POLICY_KEYS=')&&server.includes("'policyTerms','policyPrivacy','policyShipping'"),'Policy copy must be editable from Studio');
+assert.ok(client.includes('function StudioPolicies(')&&client.includes("'Policies',"),'Studio needs a Policies tab');
+assert.ok(client.includes('policySections(store.settings,policy,page)'),'Published pages must render the stored copy, falling back to the built-in');
+assert.ok(server.includes('shipping=0,quote={currency'),'Delivery is free, so no shipping is charged');
+assert.ok(client.includes("Shipping</span><b>{quote?money(quote.shipping||0)"),'The bag must show the shipping line as a zero amount');
+assert.ok(!client.includes('Our story')&&!client.includes('story shell'),'The Our Story section must be gone');
 assert.ok(client.includes("SUPPORT_EMAIL='iitdelhidrop@gmail.com'"),'Support address must be the published one');
 assert.ok(client.includes('className="footer-policies"')&&client.includes('href="/terms"')&&client.includes('href="/privacy"'),'Policy pages must be reachable from the footer');
 assert.ok(!client.includes('· PRIVACY · TERMS · RETURNS'),'The footer must link its policies rather than name them as plain text');

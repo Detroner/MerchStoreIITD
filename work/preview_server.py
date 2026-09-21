@@ -188,7 +188,7 @@ class Handler(BaseHTTPRequestHandler):
    mode=os.environ.get('RAZORPAY_MODE','demo');configured=mode in ['test','live'] and bool(os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'));return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':COUPONS,'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':mode,'configured':configured,'live':configured,'keyId':os.environ.get('RAZORPAY_KEY_ID','') if configured else '','webhookConfigured':bool(os.environ.get('RAZORPAY_WEBHOOK_SECRET')),'database':'PostgreSQL'},'sms':{'provider':os.environ.get('SMS_PROVIDER','demo'),'configured':False}})
   if path.startswith('/media/'):file=ROOT/'data'/'product-media'/path.split('/')[-1]
   elif path.startswith('/assets/'):file=ROOT/'public'/path.lstrip('/')
-  else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login','/terms','/privacy','/refund','/shipping','/contact'] or path.startswith('/products/') else path.lstrip('/'))
+  else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login','/terms','/privacy','/shipping','/contact'] or path.startswith('/products/') else path.lstrip('/'))
   if file.is_file():
    payload=file.read_bytes();self.send_response(200);self.send_header('Content-Type',mimetypes.guess_type(file)[0] or 'application/octet-stream');self.send_header('Content-Length',len(payload));self.end_headers();return self.wfile.write(payload)
   self.send_error(404)
@@ -250,7 +250,7 @@ class Handler(BaseHTTPRequestHandler):
      surcharge=0
     subtotal+=variant['price']*qty;custom_total+=surcharge*qty;items.append({'variantId':variant['id'],'name':product['name'],'quantity':qty,'unitPrice':variant['price'],'customization':customization,'customizationSurcharge':surcharge})
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
-   shipping=0 if subtotal+custom_total>=149900 else 9900;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True}})
+   shipping=0;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,'discount':0,'shipping':shipping,'total':subtotal+custom_total+shipping,'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True}})
   if path=='/api/reviews':
    if not self.require_customer():return
    text=str(body.get('body','')).strip()
