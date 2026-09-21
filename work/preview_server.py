@@ -188,7 +188,7 @@ class Handler(BaseHTTPRequestHandler):
    mode=os.environ.get('RAZORPAY_MODE','demo');configured=mode in ['test','live'] and bool(os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'));return self.json_out({'customers':customers,'reviews':REVIEWS,'orders':ORDERS,'products':products,'categories':CATEGORIES,'productTypes':TYPES,'coupons':COUPONS,'orderBreakdown':breakdown,'settings':SETTINGS,'payment':{'provider':'Razorpay','mode':mode,'configured':configured,'live':configured,'keyId':os.environ.get('RAZORPAY_KEY_ID','') if configured else '','webhookConfigured':bool(os.environ.get('RAZORPAY_WEBHOOK_SECRET')),'database':'PostgreSQL'},'sms':{'provider':os.environ.get('SMS_PROVIDER','demo'),'configured':False}})
   if path.startswith('/media/'):file=ROOT/'data'/'product-media'/path.split('/')[-1]
   elif path.startswith('/assets/'):file=ROOT/'public'/path.lstrip('/')
-  else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login'] or path.startswith('/products/') else path.lstrip('/'))
+  else:file=ROOT/('index.html' if path in ['/','/studio','/studio/','/cart','/account','/login','/terms','/privacy','/refund','/shipping','/contact'] or path.startswith('/products/') else path.lstrip('/'))
   if file.is_file():
    payload=file.read_bytes();self.send_response(200);self.send_header('Content-Type',mimetypes.guess_type(file)[0] or 'application/octet-stream');self.send_header('Content-Length',len(payload));self.end_headers();return self.wfile.write(payload)
   self.send_error(404)

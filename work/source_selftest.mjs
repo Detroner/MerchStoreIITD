@@ -160,6 +160,13 @@ assert.ok(!/MSG91_/.test(smsPayload),'The browser payload must carry no MSG91 cr
 assert.ok(!/otp-provider\.js|tokenAuth|initSendOTP/.test(client),'The client must not load or hold the MSG91 widget token');
 assert.ok(server.includes('provider_ref')&&fs.readFileSync(new URL('../migrations/023_otp_provider_reference.sql',import.meta.url),'utf8').includes('provider_ref'),'The widget reqId must be stored against the challenge, not the browser');
 assert.ok(server.includes('msg91WidgetVerify(challenge.provider_ref'),'Verification must quote the stored reqId, so the number is the one we sent to');
+// Razorpay will not activate an account whose site lacks these pages, so they are contract, not decoration.
+for(const page of ['terms','privacy','refund','shipping','contact'])assert.ok(client.includes(`${page}:{kicker:`),`Missing the ${page} policy page`);
+for(const route of ['/terms','/privacy','/refund','/shipping','/contact'])assert.ok(server.includes(`'${route}'`),`SPA must serve ${route}`);
+assert.ok(client.includes("SUPPORT_EMAIL='iitdelhidrop@gmail.com'"),'Support address must be the published one');
+assert.ok(client.includes('className="footer-policies"')&&client.includes('href="/terms"')&&client.includes('href="/privacy"'),'Policy pages must be reachable from the footer');
+assert.ok(!client.includes('· PRIVACY · TERMS · RETURNS'),'The footer must link its policies rather than name them as plain text');
+assert.ok(client.includes('not an official store of'),'Policies must state the store is not an official IIT Delhi store');
 assert.ok(server.includes('const adminConsoleEnabled=()=>!production')&&server.includes("if(!adminConsoleEnabled())return res.status(503)"),'Production Studio must remain disabled until explicitly enabled');
 assert.ok(client.includes('Administrator access')&&client.includes('Use the administrator credentials configured for this deployment.'),'Studio must explain how to authenticate');
 assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.includes("if(!demoAllowed())return res.status(503)"),'Production demo checkout must be rejected before settlement');
