@@ -59,7 +59,7 @@ ORDERS=[{'id':'order-1','order_no':'IITD-2048','customer_name':'Demo Customer','
 ORDER_HISTORY=[]
 ORDERS[0].update({'phone':'+919876500011','hostel':'Nilgiri','room_number':'118','payment_status':'paid','delivered_at':'2026-08-06T12:00:00Z'})
 PENDING_ITEMS=[{'id':'demo-item-3','productId':'tee','name':'Main Building Tee','slug':'main-building-tee','sku':'IITD-TEE-05','size':'M','color':'Cream','image':'/assets/merch-hero.png','quantity':2,'unitPrice':99900,'deliveredAt':None,'reviewed':False,'customization':None},{'id':'demo-item-4','productId':'cap','name':'Red Brick Cap','slug':'red-brick-cap','sku':'IITD-CAP-01','size':'One Size','color':'Campus Edition','image':'/assets/merch-hero.png','quantity':1,'unitPrice':69900,'deliveredAt':None,'reviewed':False,'customization':None}]
-ORDERS.append({'id':'order-2','order_no':'IITD-2049','customer_name':'Aarav Sharma','phone':'+919812345678','hostel':'Karakoram','room_number':'112','payment_status':'paid','total':269700,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-14T11:20:00Z','items':PENDING_ITEMS})
+ORDERS.append({'id':'order-2','order_no':'IITD-2049','coupon':'CAMPUS10','discount':26970,'customer_name':'Aarav Sharma','phone':'+919812345678','hostel':'Karakoram','room_number':'112','payment_status':'paid','total':269700,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-14T11:20:00Z','items':PENDING_ITEMS})
 ORDERS.append({'id':'order-3','order_no':'IITD-2050','customer_name':'Meera Iyer','phone':'+919845612300','hostel':'Himadri','room_number':'304','payment_status':'pending','total':59900,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-17T18:05:00Z','items':[{'id':'demo-item-5','productId':'tote','name':'Hauz Khas Tote','slug':'hauz-khas-tote','sku':'IITD-TOTE-01','size':'One Size','color':'Campus Edition','image':'/assets/merch-hero.png','quantity':1,'unitPrice':59900,'deliveredAt':None,'reviewed':False,'customization':None}]})
 COUPONS=[{'id':'coupon-1','code':'CAMPUS10','type':'percentage','value':10,'min_order':99900,'usage_limit':500,'used_count':84,'active':True},{'id':'coupon-2','code':'FREESHIP','type':'free_shipping','value':0,'min_order':49900,'usage_limit':250,'used_count':41,'active':False}]
 def preview_coupon(code,subtotal):
@@ -170,6 +170,7 @@ class Handler(BaseHTTPRequestHandler):
       'paymentStatus':paid_state,'paid':paid_state in ('paid','captured','demo_paid'),
       'hostel':order.get('hostel',''),'roomNumber':order.get('room_number',''),
       'username':order.get('customer_name',''),'phone':order.get('phone',''),'deliveredAt':order.get('delivered_at'),
+      'coupon':order.get('coupon',''),'discount':int(order.get('discount',0)),
       'items':[{'id':i['id'],'name':i['name'],'color':i['color'],'size':i['size'],'quantity':i['quantity'],'lineTotal':i['unitPrice']*i['quantity']} for i in order['items']]}
     done=lambda o:o.get('fulfilment_status')=='delivered'
     return self.json_out({'pending':[shape(o) for o in ORDERS if not done(o)],'delivered':[shape(o) for o in ORDERS if done(o)]})

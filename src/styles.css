@@ -210,3 +210,4 @@
 .coupon-applied{font-size:12px;font-weight:700;color:var(--accent);margin:10px 0 0}
 @media(max-width:760px){.coupon-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.promotions-page .coupon-list article{display:block}.coupon-row-actions{justify-content:flex-start}.promotions-page .coupon-list article>div+div{margin-top:16px;text-align:left}}
 @media(max-width:420px){.coupon-fields{grid-template-columns:minmax(0,1fr)}}
+.orders-coupon{display:inline-block;background:var(--accent,#f5ce3e);border:1px solid #17171d;padding:2px 6px;font:700 9px 'Space Grotesk';letter-spacing:.5px}.orders-desk-table td small{display:block;margin-top:3px;font-size:10px;color:#1b7f61;font-weight:700}.orders-nocoupon{color:#bbb}
