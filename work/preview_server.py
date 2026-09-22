@@ -12,6 +12,10 @@ SETTINGS={'brand':'THE IIT DELHI DROP','eyebrow':'CAMPUS GOODS / EST. 2026','hea
 CATEGORIES=[{'id':'cat-apparel','name':'Apparel','slug':'apparel'},{'id':'cat-accessories','name':'Accessories','slug':'accessories'},{'id':'cat-home','name':'Home','slug':'home'},{'id':'cat-stationery','name':'Stationery','slug':'stationery'}]
 TYPES=[{'id':'type-tee','name':'T-shirt','slug':'t-shirt'},{'id':'type-hoodie','name':'Hoodie','slug':'hoodie'},{'id':'type-track','name':'Trackpants','slug':'trackpants'},{'id':'type-cap','name':'Cap','slug':'cap'},{'id':'type-bag','name':'Bag','slug':'bag'},{'id':'type-mug','name':'Mug','slug':'mug'},{'id':'type-stationery','name':'Stationery','slug':'stationery'}]
 PREVIEW_SMS_PROVIDER=os.environ.get('SMS_PROVIDER','demo').lower()
+def payment_status():
+ mode=os.environ.get('RAZORPAY_MODE','demo').lower()
+ configured=mode in ['test','live'] and bool(os.environ.get('RAZORPAY_KEY_ID') and os.environ.get('RAZORPAY_KEY_SECRET'))
+ return {'provider':'Razorpay','mode':mode,'configured':configured,'live':configured,'demoAllowed':True,'keyId':os.environ.get('RAZORPAY_KEY_ID','') if configured else '','webhookConfigured':bool(os.environ.get('RAZORPAY_WEBHOOK_SECRET'))}
 def sms_status():
  widget=PREVIEW_SMS_PROVIDER=='msg91-widget'
  return {'provider':PREVIEW_SMS_PROVIDER,'configured':widget and bool(os.environ.get('MSG91_WIDGET_ID')),'demoAllowed':not widget}
@@ -97,7 +101,7 @@ class Handler(BaseHTTPRequestHandler):
   return session
  def do_GET(self):
   parsed=urlparse(self.path);path=parsed.path;params={k:v[0] for k,v in parse_qs(parsed.query).items()}
-  if path=='/api/store':return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True},'sms':sms_status()})
+  if path=='/api/store':return self.json_out({'settings':SETTINGS,'categories':CATEGORIES,'productTypes':TYPES,'hostels':HOSTELS,'payment':payment_status(),'sms':sms_status()})
   if path=='/api/catalog':
    try:
     items=[]
@@ -297,7 +301,7 @@ class Handler(BaseHTTPRequestHandler):
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
    try:coupon=preview_coupon(body.get('couponCode'),subtotal+custom_total)
    except ValueError as error:return self.json_out({'error':str(error)},400)
-   shipping=0;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,**coupon,'shipping':shipping,'total':subtotal+custom_total+shipping-coupon['discount'],'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':{'provider':'Razorpay','mode':'demo','live':False,'demoAllowed':True}})
+   shipping=0;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,**coupon,'shipping':shipping,'total':subtotal+custom_total+shipping-coupon['discount'],'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':payment_status()})
   if path=='/api/reviews':
    if not self.require_customer():return
    text=str(body.get('body','')).strip()

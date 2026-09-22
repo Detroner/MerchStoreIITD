@@ -114,6 +114,8 @@ assert.ok(client.includes('product.customization?.enabled?product.customization:
 assert.ok(client.includes('item.qty<=1?remove(item.key):update(item.key,item.qty-1)'),'Cart minus at quantity one must remove the item');
 assert.ok(client.includes("localStorage.removeItem('iitd-drop-cart-v2')"),'Confirmed orders must clear persisted cart storage synchronously');
 assert.ok(client.includes("const finishOrder=result=>{clear();setBusy(false);location.href='/account'}"),'Confirmed orders must redirect to the customer orders page');
+assert.ok(styles.includes('.order-summary>button:disabled{opacity:.45;cursor:not-allowed}'),'A disabled checkout button must look disabled rather than silently ignoring clicks');
+assert.ok(client.includes("{session&&!selectedAddressId?'Choose your hostel and room number above and save it to continue.'"),'Checkout must say why it is blocked when no address is saved');
 assert.ok(client.includes('return {cart,add,update,remove,clear,count:'),'Cart hook must expose its clear operation');
 assert.ok(client.includes('account-menu-wrap'),'Signed-in header must expose an account menu wrapper');
 assert.ok(client.includes('MY ORDERS')&&client.includes('PROFILE')&&client.includes('ADDRESSES'),'Account menu must include orders, profile, and addresses links');
