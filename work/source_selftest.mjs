@@ -119,6 +119,9 @@ assert.ok(client.includes('account-menu-wrap'),'Signed-in header must expose an 
 assert.ok(client.includes('MY ORDERS')&&client.includes('PROFILE')&&client.includes('ADDRESSES'),'Account menu must include orders, profile, and addresses links');
 assert.ok(client.includes("new URLSearchParams(location.search).get('tab')"),'Account page must support menu tab links');
 assert.ok(styles.includes('.account-menu-wrap:hover .account-menu,.account-menu-wrap:focus-within .account-menu'),'Account menu must open on hover and keyboard focus');
+assert.ok(client.includes('className="account-signout" onClick={signOut}>SIGN OUT<'),'Account menu must offer a sign out control');
+assert.ok(client.includes("await api('/api/auth/logout',{method:'POST',headers:{'X-CSRF-Token':session.csrf}})"),'Sign out must revoke the session server-side with its CSRF token');
+assert.ok(styles.includes('.account-menu a,.account-menu button{'),'Account menu must style its sign out button like its links');
 assert.ok(styles.includes('.account-profile-editor>.kicker{font-size:13px'),'Profile Details label must be larger');
 assert.ok(styles.includes('.account-profile-editor p{font-size:16px'),'Profile details copy must be larger');
 assert.ok(styles.includes('.story>div:nth-child(2)>a{gap:20px;margin-top:30px;font-size:16px'),'Find Your Piece link must be larger');

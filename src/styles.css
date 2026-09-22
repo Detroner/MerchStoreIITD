@@ -126,8 +126,8 @@
 .account-trigger svg{width:19px;height:19px}
 .account-menu{position:absolute;right:0;top:calc(100% + 9px);min-width:170px;padding:8px;background:var(--surface-raised);border:1px solid var(--border);box-shadow:4px 4px 0 var(--ink);opacity:0;visibility:hidden;transform:translateY(-7px);pointer-events:none;transition:opacity .16s ease,transform .16s ease,visibility .16s ease}
 .account-menu-wrap:hover .account-menu,.account-menu-wrap:focus-within .account-menu,.account-menu.show{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto}
-.account-menu a{display:block!important;padding:11px 12px;color:var(--ink)!important;text-decoration:none;font:700 10px 'Space Grotesk';letter-spacing:1px;white-space:nowrap}
-.account-menu a:hover,.account-menu a:focus-visible{background:var(--accent);outline:0}
+.account-menu a,.account-menu button{display:block!important;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;padding:11px 12px;color:var(--ink)!important;text-decoration:none;font:700 10px 'Space Grotesk';letter-spacing:1px;white-space:nowrap}
+.account-menu a:hover,.account-menu a:focus-visible,.account-menu button:hover,.account-menu button:focus-visible{background:var(--accent);outline:0}
 .account-profile-editor{padding:34px;gap:18px}
 .account-profile-editor>.kicker{font-size:13px;letter-spacing:2px}
 .account-profile-editor h2{font-size:36px}

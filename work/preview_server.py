@@ -270,7 +270,7 @@ class Handler(BaseHTTPRequestHandler):
   if path=='/api/auth/otp/request':
    digits=re.sub(r'\D','',str(body.get('phone','')))
    if len(digits)!=10:return self.json_out({'error':'Enter a valid Indian mobile number.'},400)
-   cid=secrets.token_hex(12);OTP[cid]={'phone':'+91'+digits,'otp':'202626'};return self.json_out({'challengeId':cid,'demoOtp':'202626','message':'A verification code has been sent.'},202)
+   cid=secrets.token_hex(12);OTP[cid]={'phone':'+91'+digits,'otp':'2026'};return self.json_out({'challengeId':cid,'demoOtp':'2026','message':'A verification code has been sent.'},202)
   if path=='/api/auth/otp/verify':
    challenge=OTP.pop(body.get('challengeId',''),None)
    if not challenge or not hmac.compare_digest(str(body.get('otp','')),challenge['otp']):return self.json_out({'error':'The verification code is invalid or expired.'},400)
