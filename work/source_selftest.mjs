@@ -65,7 +65,7 @@ assert.ok(client.includes("api('/api/admin/orders/fulfilment'")&&client.includes
 assert.ok(client.includes("'\ufeff'+[head,...rows]"),'CSV export must carry a BOM so Excel reads it as UTF-8');
 assert.ok(client.includes('rowSpan={order.items.length}'),'Order-level columns must span the line items they belong to');
 assert.ok(client.includes("order.fulfilment_status==='delivered'?'ORDER DELIVERED'"),'A ticked order must read as delivered on the customer order page');
-assert.ok(client.includes("else if(event.target.tagName==='IMG')setZoomed(true)")&&styles.includes('.pdp-zoom-canvas'),'Tapping a product photo must zoom while swipes still navigate');
+assert.ok(client.includes('onTouchEnd={handleTouchEnd}')&&styles.includes('.pdp-zoom-canvas'),'Swipes must still navigate the gallery and the enlarged view must keep its canvas');
 assert.ok(client.includes('setShownPhoto(current=>(current+1)%photos.length)')&&styles.includes('.catalog-card-photos img.shown'),'Catalogue cards must cycle front and back rather than split the frame');
 assert.ok(server.includes("app.get('/api/admin/products/:id/variants'")&&server.includes("app.patch('/api/admin/variants/:id'"),'Stock desk needs its variant read and write');
 assert.ok(server.includes('INSERT INTO inventory_movements(variant_id,movement_type,quantity_delta,idempotency_key,reason)'),'Every stock change must be written to the ledger');
@@ -193,6 +193,9 @@ assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.include
 assert.ok(server.includes("res.setHeader('X-Frame-Options','DENY')")&&server.includes("res.setHeader('Strict-Transport-Security'"),'Baseline browser security headers must be present');
 assert.ok(server.includes("res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups')"),'Checkout runs its 3DS step in a popup that answers through window.opener, so COOP must allow popups');
 assert.ok(server.includes("WHERE o.user_id=$1 AND o.payment_status IN ('paid','demo_paid')"),'A customer must only see orders whose payment was confirmed, never a pending checkout');
+assert.ok(client.includes('className="pdp-fullscreen" aria-label="View photo full screen" onClick={()=>setZoomed(true)}'),'The enlarged photo must open from an explicit full screen control');
+assert.ok(!client.includes("event.target.tagName==='IMG')setZoomed(true)"),'Tapping the photo must not open the enlarged view; a stray touch would trigger it');
+assert.ok(styles.includes('.pdp-gallery-stage{position:relative'),'The full screen control anchors to the photo, not to the gallery column');
 assert.ok(server.includes('hostel_id,room_number')&&server.includes('SELECT id,name FROM hostels'),'Server must persist hostel delivery settings');
 assert.ok(server.includes('catalogMediaJson')&&!server.includes('googleMapsBrowserKey:process.env.GOOGLE_MAPS_BROWSER_KEY'),'Server must keep the Maps key out of the public store payload and scope catalogue media');
 assert.equal(packageJson.engines?.node,'22.x','Package must declare the Azure Node major');
