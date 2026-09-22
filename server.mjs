@@ -23,7 +23,7 @@ const app=express();
 app.disable('x-powered-by');
 app.set('trust proxy',1);
 app.use(express.json({limit:'1mb',verify:(req,res,buf)=>{req.rawBody=Buffer.from(buf)}}));app.use((req,res,next)=>{if(req.body==null&&['POST','PUT','PATCH'].includes(req.method))req.body={};next()});
-app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');res.setHeader('Cross-Origin-Opener-Policy','same-origin');res.setHeader('X-Frame-Options','DENY');res.setHeader('Cross-Origin-Resource-Policy','same-origin');if(production)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next()});
+app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');res.setHeader('X-Frame-Options','DENY');res.setHeader('Cross-Origin-Resource-Policy','same-origin');if(production)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next()});
 
 const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
 const hmac=value=>crypto.createHmac('sha256',process.env.OTP_SECRET).update(value).digest('hex');
