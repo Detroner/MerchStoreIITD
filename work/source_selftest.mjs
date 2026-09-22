@@ -192,6 +192,7 @@ assert.ok(client.includes('Administrator access')&&client.includes('Use the admi
 assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.includes("if(!demoAllowed())return res.status(503)"),'Production demo checkout must be rejected before settlement');
 assert.ok(server.includes("res.setHeader('X-Frame-Options','DENY')")&&server.includes("res.setHeader('Strict-Transport-Security'"),'Baseline browser security headers must be present');
 assert.ok(server.includes("res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups')"),'Checkout runs its 3DS step in a popup that answers through window.opener, so COOP must allow popups');
+assert.ok(server.includes("WHERE o.user_id=$1 AND o.payment_status IN ('paid','demo_paid')"),'A customer must only see orders whose payment was confirmed, never a pending checkout');
 assert.ok(server.includes('hostel_id,room_number')&&server.includes('SELECT id,name FROM hostels'),'Server must persist hostel delivery settings');
 assert.ok(server.includes('catalogMediaJson')&&!server.includes('googleMapsBrowserKey:process.env.GOOGLE_MAPS_BROWSER_KEY'),'Server must keep the Maps key out of the public store payload and scope catalogue media');
 assert.equal(packageJson.engines?.node,'22.x','Package must declare the Azure Node major');
