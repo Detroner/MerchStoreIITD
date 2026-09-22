@@ -176,7 +176,7 @@ assert.ok(!client.includes('Our story')&&!client.includes('story shell'),'The Ou
 assert.ok(server.includes('LEFT JOIN coupon_redemptions cr ON cr.order_id=o.id')&&server.includes('GROUP BY o.id,u.full_name,u.phone_e164,c.code'),'Coupon code must join into the orders desk and be grouped');
 assert.ok(client.includes('<th>Coupon</th>')&&client.includes('orders-coupon'),'The orders desk must show which coupon was used');
 assert.ok(client.includes("'Customer','Coupon','Discount','Paid value'"),'CSV export must carry the coupon and its discount');
-assert.ok(client.includes("SUPPORT_EMAIL='iitdelhidrop@gmail.com'"),'Support address must be the published one');
+assert.ok(client.includes("SUPPORT_EMAIL='TheIITDelhiDrop@gmail.com'"),'Support address must be the published one');
 assert.ok(client.includes('className="footer-policies"')&&client.includes('href="/terms"')&&client.includes('href="/privacy"'),'Policy pages must be reachable from the footer');
 assert.ok(!client.includes('· PRIVACY · TERMS · RETURNS'),'The footer must link its policies rather than name them as plain text');
 assert.ok(client.includes('not an official store of'),'Policies must state the store is not an official IIT Delhi store');
