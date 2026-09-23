@@ -10,6 +10,12 @@ permissions:
   contents: read
   id-token: write
 
+# Two quick pushes to main would otherwise run two migration jobs and two deployments at once.
+# Queue them rather than cancel, so a migration is never abandoned part-way through.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
 env:
   AZURE_SUBSCRIPTION_ID: 92e0da8a-a2bd-4791-8b9b-412bf60101b1
   AZURE_TENANT_ID: 624d5c4b-45c5-4122-8cd0-44f0f84e945d
@@ -69,8 +75,14 @@ jobs:
 
       - name: Read deployment secrets from Key Vault
         run: |
-          echo "DATABASE_URL=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NAME" --name DATABASE-URL --query value -o tsv)" >> "$GITHUB_ENV"
-          echo "DATABASE_SSL=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NAME" --name DATABASE-SSL --query value -o tsv)" >> "$GITHUB_ENV"
+          # Key Vault values read at run time are not masked the way ${{ secrets.* }} is,
+          # so register them before they can reach a later log line.
+          DATABASE_URL=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NAME" --name DATABASE-URL --query value -o tsv)
+          DATABASE_SSL=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NAME" --name DATABASE-SSL --query value -o tsv)
+          echo "::add-mask::$DATABASE_URL"
+          echo "::add-mask::$DATABASE_SSL"
+          echo "DATABASE_URL=$DATABASE_URL" >> "$GITHUB_ENV"
+          echo "DATABASE_SSL=$DATABASE_SSL" >> "$GITHUB_ENV"
 
       - name: Open temporary PostgreSQL access for this runner
         run: |
@@ -120,7 +132,6 @@ jobs:
             --type zip \
             --async false \
             --timeout 900000 \
-            --track-status true \
             --subscription "$AZURE_SUBSCRIPTION_ID"
 
       - name: Enable Studio console

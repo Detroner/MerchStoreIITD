@@ -207,4 +207,8 @@ assert.ok(workflow.includes("node-version: '22'")&&workflow.includes("npm audit 
 assert.ok(workflow.includes("find migrations -maxdepth 1 -type f -name '*.sql'")&&workflow.includes("'.env*'"),'CI must validate all migrations and exclude dotenv files from deployment');
 assert.ok(workflow.includes('ADMIN_CONSOLE_ENABLED=true'),'Deployment must explicitly enable the protected Studio console');
 assert.ok(preview.includes("'demoAllowed':True"),'Preview-only demo provider state must be explicit');
+assert.ok(server.includes("app.post('/api/checkout/quote',rateLimit('quote'"),'The unauthenticated quote route must be rate limited; it fans out to one query per cart line');
+assert.ok(server.includes('if(rateBuckets.size>5000)for(const [staleKey,stale] of rateBuckets)if(now>stale.reset)rateBuckets.delete(staleKey);'),'Rate limit buckets must be pruned; the map is keyed by caller and would otherwise grow without bound');
+assert.ok(workflow.includes('::add-mask::$DATABASE_URL')&&!workflow.includes('--track-status true'),'Key Vault values must be masked, and deploy status must be proved by the health check rather than the CLI tracker that reports false failures');
+assert.ok(workflow.includes('group: deploy-main')&&workflow.includes('cancel-in-progress: false'),'Deployments must queue so two migration jobs never run at once');
 console.log('source self-test passed');
