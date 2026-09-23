@@ -211,5 +211,6 @@ assert.ok(server.includes("app.post('/api/checkout/quote',rateLimit('quote'"),'T
 assert.ok(server.includes('return match?match[1]:raw};')&&!server.includes('const clientIp=req=>req.ip||req.socket.remoteAddress||\'unknown\';'),'clientIp must strip the port Azure appends to the forwarded address; keyed on ip:port every rate limit resets per TCP connection and throttles nothing');
 assert.ok(server.includes('if(rateBuckets.size>5000)for(const [staleKey,stale] of rateBuckets)if(now>stale.reset)rateBuckets.delete(staleKey);'),'Rate limit buckets must be pruned; the map is keyed by caller and would otherwise grow without bound');
 assert.ok(workflow.includes('::add-mask::$DATABASE_URL')&&!workflow.includes('--track-status true'),'Key Vault values must be masked, and deploy status must be proved by the health check rather than the CLI tracker that reports false failures');
+assert.ok(server.includes('build:buildSha')&&workflow.includes('> BUILD_SHA')&&workflow.includes('*"$GITHUB_SHA"*'),'The deploy gate must wait for the health endpoint to report this commit; az webapp restart is asynchronous, so any-200 polling passes against the build being replaced');
 assert.ok(workflow.includes('group: deploy-main')&&workflow.includes('cancel-in-progress: false'),'Deployments must queue so two migration jobs never run at once');
 console.log('source self-test passed');

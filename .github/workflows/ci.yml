@@ -120,6 +120,7 @@ jobs:
           # Zip deploy does not reliably run the Node build step on this App Service.
           # Include the production dependency tree so node server.mjs can start after a clean deploy.
           npm ci --omit=dev
+          printf '%s' "$GITHUB_SHA" > BUILD_SHA
           zip -qr /tmp/merchstore-iitd-${GITHUB_SHA}.zip . \
             -x '.git/*' '.github/*' 'tools/*' 'work/*' '*.log' '.env*' 'audit-*.md' 'SECURITY_AUDIT_PRODUCTION_READINESS.md'
 
@@ -148,12 +149,17 @@ jobs:
       - name: Restart App Service
         run: az webapp restart --resource-group "$AZURE_RESOURCE_GROUP" --name "$AZURE_WEBAPP_NAME" --subscription "$AZURE_SUBSCRIPTION_ID"
 
-      - name: Verify health endpoint
+      - name: Verify health endpoint serves this commit
         run: |
-          for attempt in $(seq 1 18); do
-            if curl --fail --silent --show-error --max-time 15 "https://${AZURE_WEBAPP_NAME}.azurewebsites.net/api/health"; then
-              exit 0
-            fi
+          # Waiting for any 200 is not enough: the restart is asynchronous, so the first probe
+          # answers from the process being replaced. Wait for the commit itself.
+          for attempt in $(seq 1 30); do
+            body=$(curl --fail --silent --max-time 15 "https://${AZURE_WEBAPP_NAME}.azurewebsites.net/api/health" || true)
+            case "$body" in
+              *"$GITHUB_SHA"*) echo "serving $GITHUB_SHA: $body"; exit 0 ;;
+            esac
+            echo "attempt $attempt: $body"
             sleep 10
           done
+          echo "App Service never reported $GITHUB_SHA"
           exit 1
