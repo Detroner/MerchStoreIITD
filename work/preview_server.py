@@ -520,7 +520,7 @@ class Handler(BaseHTTPRequestHandler):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
    if path=='/api/admin/settings':
-    allowed={'brand','announcement','headline','subhead','primary','secondary','accent','background','ink','radius','motion','motionIntensity','motionPreset','heroImage','heroButton','storyTitle','storyBody','footerNote'}
+    allowed={'brand','eyebrow','announcement','headline','subhead','primary','secondary','accent','background','ink','darkPrimary','darkSecondary','darkAccent','darkBackground','darkInk','darkStoryCopy','darkKineticBackground','radius','motion','motionIntensity','motionPreset','heroImage','heroButton','storyTitle','storyBody','footerNote','policyTerms','policyPrivacy','policyShipping','typography'}
     SETTINGS.update({key:str(value)[:1000] for key,value in body.items() if key in allowed});return self.json_out({'ok':True,'settings':SETTINGS})
    if path.startswith('/api/admin/products/'):
     product=next((p for p in PRODUCTS if p['id']==path.rsplit('/',1)[1]),None)
