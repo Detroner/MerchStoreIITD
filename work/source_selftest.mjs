@@ -193,7 +193,10 @@ assert.ok(client.includes('Administrator access')&&client.includes('Use the admi
 assert.ok(server.includes("app.post('/api/checkout/demo-order'")&&server.includes("if(!demoAllowed())return res.status(503)"),'Production demo checkout must be rejected before settlement');
 assert.ok(server.includes("res.setHeader('X-Frame-Options','DENY')")&&server.includes("res.setHeader('Strict-Transport-Security'"),'Baseline browser security headers must be present');
 assert.ok(server.includes("res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups')"),'Checkout runs its 3DS step in a popup that answers through window.opener, so COOP must allow popups');
-assert.ok(server.includes("WHERE o.user_id=$1 AND o.payment_status IN ('paid','demo_paid')"),'A customer must only see orders whose payment was confirmed, never a pending checkout');
+assert.ok(server.includes("const PAID_STATUSES=['paid','captured','demo_paid'];"),'One list defines a settled payment so the order views cannot drift apart');
+assert.ok(server.includes('WHERE o.user_id=$1 AND o.payment_status=ANY($2)'),'A customer must only see orders whose payment was confirmed, never a pending checkout');
+assert.ok(server.includes("WHERE o.order_status<>'cancelled' AND o.payment_status=ANY($1)"),'The fulfilment desk must only list orders Razorpay has confirmed as paid');
+assert.ok(!client.includes('orders-unpaid'),'The unpaid badge cannot render once unpaid orders are filtered out, so it must not linger');
 assert.ok(client.includes('className="pdp-fullscreen" aria-label="View photo full screen" onClick={()=>setZoomed(true)}'),'The enlarged photo must open from an explicit full screen control');
 assert.ok(!client.includes("event.target.tagName==='IMG')setZoomed(true)"),'Tapping the photo must not open the enlarged view; a stray touch would trigger it');
 assert.ok(styles.includes('.pdp-gallery-stage{position:relative'),'The full screen control anchors to the photo, not to the gallery column');

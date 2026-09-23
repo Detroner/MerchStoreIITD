@@ -177,7 +177,9 @@ class Handler(BaseHTTPRequestHandler):
       'coupon':order.get('coupon',''),'discount':int(order.get('discount',0)),
       'items':[{'id':i['id'],'name':i['name'],'color':i['color'],'size':i['size'],'quantity':i['quantity'],'lineTotal':i['unitPrice']*i['quantity']} for i in order['items']]}
     done=lambda o:o.get('fulfilment_status')=='delivered'
-    return self.json_out({'pending':[shape(o) for o in ORDERS if not done(o)],'delivered':[shape(o) for o in ORDERS if done(o)]})
+    # server.mjs: WHERE o.order_status<>'cancelled' AND o.payment_status=ANY(PAID_STATUSES)
+    settled=[o for o in ORDERS if o.get('payment_status','paid') in ('paid','captured','demo_paid')]
+    return self.json_out({'pending':[shape(o) for o in settled if not done(o)],'delivered':[shape(o) for o in settled if done(o)]})
    if path=='/api/admin/orders':return self.json_out({'items':ORDERS,'nextCursor':None})
    if path.startswith('/api/admin/orders/'):
     order=next((o for o in ORDERS if o['id']==path.rsplit('/',1)[1]),None)
