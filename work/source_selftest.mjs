@@ -208,6 +208,7 @@ assert.ok(workflow.includes("find migrations -maxdepth 1 -type f -name '*.sql'")
 assert.ok(workflow.includes('ADMIN_CONSOLE_ENABLED=true'),'Deployment must explicitly enable the protected Studio console');
 assert.ok(preview.includes("'demoAllowed':True"),'Preview-only demo provider state must be explicit');
 assert.ok(server.includes("app.post('/api/checkout/quote',rateLimit('quote'"),'The unauthenticated quote route must be rate limited; it fans out to one query per cart line');
+assert.ok(server.includes('return match?match[1]:raw};')&&!server.includes('const clientIp=req=>req.ip||req.socket.remoteAddress||\'unknown\';'),'clientIp must strip the port Azure appends to the forwarded address; keyed on ip:port every rate limit resets per TCP connection and throttles nothing');
 assert.ok(server.includes('if(rateBuckets.size>5000)for(const [staleKey,stale] of rateBuckets)if(now>stale.reset)rateBuckets.delete(staleKey);'),'Rate limit buckets must be pruned; the map is keyed by caller and would otherwise grow without bound');
 assert.ok(workflow.includes('::add-mask::$DATABASE_URL')&&!workflow.includes('--track-status true'),'Key Vault values must be masked, and deploy status must be proved by the health check rather than the CLI tracker that reports false failures');
 assert.ok(workflow.includes('group: deploy-main')&&workflow.includes('cancel-in-progress: false'),'Deployments must queue so two migration jobs never run at once');
