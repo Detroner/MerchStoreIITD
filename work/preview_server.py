@@ -132,10 +132,6 @@ class Handler(BaseHTTPRequestHandler):
    s=self.customer()
    if not s:return self.json_out({'error':'No customer session.'},401)
    return self.json_out({'user':s['user'],'csrf':s['csrf']})
-  if path=='/api/account/wallet':
-   session=self.require_customer()
-   if not session:return
-   return self.json_out({'balance':0,'currency':'INR','entries':[]})
   if path=='/api/account/orders':
    if not self.require_customer():return
    return self.json_out({'orders':ORDERS})
@@ -303,7 +299,7 @@ class Handler(BaseHTTPRequestHandler):
    if not items:return self.json_out({'error':'Your bag is empty.'},400)
    try:coupon=preview_coupon(body.get('couponCode'),subtotal+custom_total)
    except ValueError as error:return self.json_out({'error':str(error)},400)
-   shipping=0;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,**coupon,'shipping':shipping,'total':subtotal+custom_total+shipping-coupon['discount'],'walletAvailable':0,'walletApplied':0,'walletReward':0,'payment':payment_status()})
+   shipping=0;return self.json_out({'currency':'INR','items':items,'subtotal':subtotal,'customizationTotal':custom_total,**coupon,'shipping':shipping,'total':subtotal+custom_total+shipping-coupon['discount'],'payment':payment_status()})
   if path=='/api/reviews':
    if not self.require_customer():return
    text=str(body.get('body','')).strip()

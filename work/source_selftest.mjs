@@ -77,14 +77,14 @@ assert.ok(client.includes('const quickStatus=async product=>')&&client.includes(
 assert.ok(client.includes('className="product-search"')&&client.includes('statusFilter'),'Product list must be searchable and filterable by status');
 assert.ok(client.includes('className="product-index-pick"'),'Product rows must separate selection from their quick actions');
 assert.ok(styles.includes('.catalog-art{height:min(96vw,470px)'),'Mobile product cards must use the shorter photo frame');
-// A wallet failure used to reject the shared Promise.all and the silent catch left a customer
-// looking at an empty order history while their orders sat safely on the server.
-assert.ok(!client.includes("Promise.all([api('/api/account/orders'"),'Account orders must not share a promise with the wallet lookup');
 assert.ok(client.includes("api('/api/account/orders',{headers:{'X-CSRF-Token':session.csrf}}).then(result=>setOrders(result.orders||[])).catch("),'A failed order fetch must surface rather than be swallowed');
 // the preview harness has to answer everything the client calls, or local end-to-end runs pass
 // on paths that only fail against the real server
-for(const route of ['/api/checkout/demo-order','/api/account/wallet','/api/admin/orders/fulfilment'])assert.ok(preview.includes(route),`Preview server must implement ${route}`);
+for(const route of ['/api/checkout/demo-order','/api/admin/orders/fulfilment'])assert.ok(preview.includes(route),`Preview server must implement ${route}`);
 assert.ok(preview.includes("hostel_id=str(body.get('hostelId',''))"),'Preview address capture must accept the hostel-only shape the client sends');
+// the loyalty wallet is gone; these names must not creep back into any layer
+for(const [name,text] of [['server.mjs',server],['main.jsx',client],['styles.css',styles],['preview_server.py',preview]])assert.ok(!/wallet/i.test(text),`${name} must not mention the removed loyalty wallet`);
+assert.ok(server.includes('function applyQuoteTotal(quote){quote.total=quote.subtotal+quote.customizationTotal+quote.shipping-(quote.discount||0)'),'Removing the wallet took the total recomputation with it, so a coupon needs its own');
 // order_status_history.field_name is CHECK-constrained to the column names; passing 'fulfilment'
 // instead of 'fulfilment_status' aborts the whole transaction, which is how the delivered tick broke.
 const historyFields=[...server.matchAll(/INSERT INTO order_status_history\([^)]*\)[\s\S]{0,120}?\[[^,\[\]]+,'([a-z_]+)'/g)].map(m=>m[1]);

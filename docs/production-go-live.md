@@ -31,7 +31,7 @@ The deployment workflow now uses Node 22, declares the Node 22 engine in `packag
 | Surface | Current production behavior | Reason |
 |---|---|---|
 | Customer phone sign-in | `503`: secure sign-in is unavailable until MSG91 is configured | Prevents browser-visible demo OTPs from becoming an authentication method |
-| Demo checkout | `503`: no-charge orders are disabled in production before customer-session lookup | Prevents stock, wallet, coupon, and order mutations without a real payment |
+| Demo checkout | `503`: no-charge orders are disabled in production before customer-session lookup | Prevents stock, coupon, and order mutations without a real payment |
 | Razorpay checkout | Not configured; no provider order is created | No Razorpay account or credentials have been supplied |
 | Studio login and admin APIs | Enabled by the deployment workflow through `ADMIN_CONSOLE_ENABLED=true`; access still requires `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH`, the session cookie, and the HMAC proof header | Keeps the console protected while allowing the operator to use the Studio |
 | Product browsing and cart quoting | Available | Catalogue can be demonstrated without pretending that ordering is live |
@@ -58,7 +58,7 @@ First configure `RAZORPAY_MODE=test`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, 
 https://theiitdelhidrop.azurewebsites.net/api/payments/razorpay/webhook
 ```
 
-Test successful payment, failed payment, user dismissal, a stale or mismatched order, a mismatched amount or currency, a duplicate webhook, and a delayed or out-of-order webhook. Verify that the server only settles a captured INR payment matched to the internal order and that inventory, wallet redemption, wallet reward, payment attempts, and audit records are each changed exactly once. Razorpay documents raw-body HMAC-SHA256 signature validation, duplicate event handling through the event ID, and the fact that webhook order is not guaranteed [3].
+Test successful payment, failed payment, user dismissal, a stale or mismatched order, a mismatched amount or currency, a duplicate webhook, and a delayed or out-of-order webhook. Verify that the server only settles a captured INR payment matched to the internal order and that inventory, payment attempts, and audit records are each changed exactly once. Razorpay documents raw-body HMAC-SHA256 signature validation, duplicate event handling through the event ID, and the fact that webhook order is not guaranteed [3].
 
 Before switching to live mode, reconcile test orders against the Razorpay dashboard, confirm refund and cancellation handling, document customer support and fulfilment procedures, complete merchant onboarding, and perform a controlled low-value live test. Change to `RAZORPAY_MODE=live` only after those checks pass. Never mark an order paid from a browser redirect alone.
 

@@ -7,12 +7,11 @@ A creative, mobile-first merchandise storefront and operations Studio built with
 - Responsive storefront with a stable embedded catalogue, size filters, sorting, four-card phone batches and graceful empty/error states.
 - Full product pages with exact size × colour variants, stock, customization preview and production-time disclosure; personalization is included in the product price.
 - Persistent cart with server-authoritative quote validation and Razorpay Standard Checkout when configured; production refuses no-charge demo orders.
-- Phone OTP registration and login, affiliation-aware profiles, optional hostel details, durable sessions and a customer loyalty wallet; production refuses demo OTP authentication until MSG91 is configured.
-- Per-product wallet reward percentages controlled from Studio; rewards and redemptions are recorded in an auditable PostgreSQL ledger.
+- Phone OTP registration and login, affiliation-aware profiles, optional hostel details, durable sessions; production refuses demo OTP authentication until MSG91 is configured.
 - Product customization placements are controlled per product from Studio; customers see only the enabled Front, Back or Side choices.
 - Verified-purchase reviews from My Orders, a 400-word limit, up to three image descriptors and Studio moderation. Placeholder ratings and seeded review counts are not shown.
 - PostgreSQL schema for catalogue, variants, inventory, customers, addresses, orders, customization snapshots, coupons, reviews and idempotent payment events.
-- Studio controls for products and photos, themes, motion, coupons, reviews, customers, product/size demand, wallet adjustments, customization placements and the complete Our Story page. Product management includes structured features, multiple photos, explicit thumbnail selection, archiving and safe draft deletion.
+- Studio controls for products and photos, themes, motion, coupons, reviews, customers, product/size demand, customization placements and the complete Our Story page. Product management includes structured features, multiple photos, explicit thumbnail selection, archiving and safe draft deletion.
 - Argon2 administrator credentials, HttpOnly cookies, CSRF proofs, throttling, security headers and audit records.
 - Razorpay Standard Checkout and MSG91 OTP adapters; external providers remain disabled until credentials and merchant onboarding are configured, and production fails closed rather than exposing demo credentials or creating no-charge orders.
 

@@ -69,8 +69,7 @@ function paymentHarness(row=coupon){
   const calls=[],provider=[],orders=[],attempts=[];
   const query=async(sql,values=[])=>{
     calls.push({sql,values});
-    if(sql.includes('FROM product_variants v JOIN products'))return {rows:[{id:'variant',product_id:'product',name:'Tee',slug:'tee',base_price:'100000',stock_on_hand:10,reserved_stock:0,wallet_reward_percent:0}]};
-    if(sql.startsWith('SELECT balance'))return {rows:[{balance:'5000'}]};
+    if(sql.includes('FROM product_variants v JOIN products'))return {rows:[{id:'variant',product_id:'product',name:'Tee',slug:'tee',base_price:'100000',stock_on_hand:10,reserved_stock:0}]};
     if(sql.includes('FROM addresses'))return {rows:[{id:'address',recipient_name:'Customer',hostel_id:'hostel'}]};
     if(sql.startsWith('SELECT * FROM coupons'))return {rows:row?[row]:[]};
     if(sql.includes('count(*)'))return {rows:[{count:0}]};
@@ -82,28 +81,27 @@ function paymentHarness(row=coupon){
   const client={query,release(){}};
   let handler;
   const context={crypto,randomToken:()=>crypto.randomUUID().slice(0,6),query,pool:{connect:async()=>client},CouponError,quoteCoupon,recordCoupon,requireCustomer:()=>{},paymentStatus:()=>({live:true}),razorpayConfigured:()=>true,razorpayMode:()=> 'test',process:{env:{RAZORPAY_KEY_ID:'test_key'}},razorpayRequest:async(path,body)=>{provider.push({path,body});return {id:'order_provider'}},app:{post(path,middleware,callback){handler=callback}}};
-  const helpers=['addressSnapshot','createPendingRazorpayOrder','applyWalletCredits','calculateQuote','getWalletBalance'];
+  const helpers=['addressSnapshot','createPendingRazorpayOrder','applyQuoteTotal','calculateQuote'];
   const helperSource=helpers.map(name=>source.split('\n').find(line=>line.startsWith('function '+name+'(')||line.startsWith('async function '+name+'('))).join('\n');
   const dbQueryLine=source.split('\n').find(line=>line.startsWith('const dbQuery='));
   const route=source.slice(source.indexOf("app.post('/api/checkout/razorpay/order'"),source.indexOf("app.post('/api/checkout/razorpay/verify'"));
   vm.runInNewContext(dbQueryLine+'\n'+helperSource+'\n'+route,context);
   return {calls,provider,orders,attempts,async run(overrides={}){
     let result,error;const res={status(){return this},json(value){result=value}};
-    await handler({body:{items:[{variantId:'variant',qty:2}],couponCode:'DROP20',walletCredits:5000,addressId:'address',total:1,amount:1,discount:199999,...overrides},customer:{user_id:'customer'}},res,e=>{error=e});
+    await handler({body:{items:[{variantId:'variant',qty:2}],couponCode:'DROP20',addressId:'address',total:1,amount:1,discount:199999,...overrides},customer:{user_id:'customer'}},res,e=>{error=e});
     return {result,error};
   }};
 }
-test('Razorpay receives only the authoritative capped discount and wallet adjusted total',async()=>{
+test('Razorpay receives only the authoritative capped discount and server total',async()=>{
   const h=paymentHarness(),{result,error}=await h.run();
   assert.equal(error,undefined);
   assert.equal(result.quote.subtotal,200000);
   assert.equal(result.quote.discount,15000);
-  assert.equal(result.quote.walletApplied,5000);
-  assert.equal(result.payment.amount,180000);
-  assert.equal(h.provider[0].body.amount,180000);
-  assert.equal(h.orders[0][10],180000);
+  assert.equal(result.payment.amount,185000);
+  assert.equal(h.provider[0].body.amount,185000);
+  assert.equal(h.orders[0][10],185000);
   assert.equal(h.orders[0][7],15000);
-  assert.equal(h.attempts[0][2],180000);
+  assert.equal(h.attempts[0][2],185000);
   assert.ok(h.calls.findIndex(x=>x.sql.startsWith('INSERT INTO orders'))<h.calls.findIndex(x=>x.sql.startsWith('INSERT INTO coupon_redemptions')));
 });
 test('invalid and expired coupons never reach Razorpay',async()=>{
@@ -117,6 +115,6 @@ test('minimum Razorpay amount is checked after all deductions',async()=>{
   assert.match(error.message,/at least INR 1/);assert.equal(h.provider.length,0);assert.equal(h.attempts.length,0);
 });
 test('no coupon uses the undiscounted server total, ignoring client totals',async()=>{
-  const h=paymentHarness(),{result,error}=await h.run({couponCode:'',walletCredits:0});
+  const h=paymentHarness(),{result,error}=await h.run({couponCode:''});
   assert.equal(error,undefined);assert.equal(result.payment.amount,200000);assert.equal(h.provider[0].body.amount,200000);
 });
