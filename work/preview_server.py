@@ -22,7 +22,7 @@ def sms_status():
 HOSTELS=[{'id':f'hostel-{i+1}','name':name} for i,name in enumerate(['Aravali','Girnar','Himadri','Jwalamukhi','Kailash','Karakoram','Kumaon','Nilgiri','Satpura','Shivalik','Udaigiri','Vindhyachal','Zanskar'])]
 
 def make_variants(pid,apparel,price):
- sizes=['S','M','L','XL'] if apparel else ['One Size']; colors=['Navy','Cream'] if apparel else ['Campus Edition'];out=[]
+ sizes=['XS','S','M','L','XL','XXL'] if apparel else ['One Size']; colors=['Navy','Cream'] if apparel else ['Campus Edition'];out=[]
  for i,(size,color) in enumerate((x,y) for x in sizes for y in colors):out.append({'id':f'variant-{pid}-{i+1}','sku':f'IITD-{pid.upper()}-{i+1:02d}','size':size,'color':color,'price':price,'stock':max(2,9-i),'reserved':2 if i==0 else 0,'active':True})
  return out
 def custom(enabled=True): return {'enabled':enabled,'label':'Name or nickname','min':1,'max':16,'placements':['Front chest','Back','Sleeve'],'styles':['Campus Block','Notebook Script'],'colors':['White','Red','Cobalt'],'surcharge':14900,'addedDays':2,'returnPolicy':'Customized items cannot be returned unless defective.'} if enabled else None

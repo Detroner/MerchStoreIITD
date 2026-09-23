@@ -14,6 +14,7 @@ const migration=fs.readFileSync(new URL('../migrations/004_order_operations_colo
 const mediaMigration=fs.readFileSync(new URL('../migrations/010_product_catalog_management.sql',import.meta.url),'utf8');
 const jerseyRemoval=fs.readFileSync(new URL('../migrations/019_remove_iit_delhi_01_jersey.sql',import.meta.url),'utf8');
 const priceMigration=fs.readFileSync(new URL('../migrations/018_update_drop_prices.sql',import.meta.url),'utf8');
+const sizeMigration=fs.readFileSync(new URL('../migrations/025_add_xs_xxl_sizes.sql',import.meta.url),'utf8');
 
 for(const route of ['/api/admin/orders','/api/admin/orders/summary','/api/admin/orders/matrix','/api/admin/vendor-batches','/api/admin/products/:id/customization','/api/admin/products/:id/colorways','/api/admin/products/:id/media/upload','/api/admin/media/:id','/api/admin/products/:id/restore'])assert.ok(server.includes(route),`Missing ${route}`);
 for(const table of ['product_colorways','vendor_batches','vendor_batch_items','order_status_history'])assert.ok(migration.includes(`CREATE TABLE ${table}`),`Missing ${table}`);
@@ -82,6 +83,14 @@ assert.ok(client.includes("api('/api/account/orders',{headers:{'X-CSRF-Token':se
 // on paths that only fail against the real server
 for(const route of ['/api/checkout/demo-order','/api/admin/orders/fulfilment'])assert.ok(preview.includes(route),`Preview server must implement ${route}`);
 assert.ok(preview.includes("hostel_id=str(body.get('hostelId',''))"),'Preview address capture must accept the hostel-only shape the client sends');
+// XS and XXL: one order list drives the card, the product page and the stock desk
+assert.ok(client.includes("const SIZE_ORDER=['XS','S','M','L','XL','XXL'];"),'A single size order must cover XS through XXL');
+assert.ok(!/\['S','M','L','XL'\]/.test(client),'No component may keep its own S-XL list beside SIZE_ORDER');
+assert.ok(server.includes("ARRAY['XS','S','M','L','XL','XXL','One Size']"),'The stock desk must sort XS first and XXL last');
+assert.ok(client.includes("rows:[['XS',40,27,19,8],"),'The size guide must list XS');
+assert.ok(sizeMigration.includes("CROSS JOIN (VALUES ('XS'),('XXL'))")&&sizeMigration.includes("WHERE s.size='S'"),'The migration must add both sizes from the existing S variants');
+assert.ok(sizeMigration.includes('s.sku||'+String.fromCharCode(39)+'-'+String.fromCharCode(39)+'||n.size'),'New SKUs must extend a unique SKU so ON CONFLICT cannot silently drop a size');
+assert.ok(/,\s*0,\s*TRUE/.test(sizeMigration),'New sizes must start at zero stock rather than inventing inventory');
 // the loyalty wallet is gone; these names must not creep back into any layer
 for(const [name,text] of [['server.mjs',server],['main.jsx',client],['styles.css',styles],['preview_server.py',preview]])assert.ok(!/wallet/i.test(text),`${name} must not mention the removed loyalty wallet`);
 assert.ok(server.includes('function applyQuoteTotal(quote){quote.total=quote.subtotal+quote.customizationTotal+quote.shipping-(quote.discount||0)'),'Removing the wallet took the total recomputation with it, so a coupon needs its own');
