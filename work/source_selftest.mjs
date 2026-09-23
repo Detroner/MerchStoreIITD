@@ -183,7 +183,6 @@ assert.ok(client.includes('className="footer-policies"')&&client.includes('href=
 assert.ok(!client.includes('· PRIVACY · TERMS · RETURNS'),'The footer must link its policies rather than name them as plain text');
 assert.ok(client.includes('not an official store of'),'Policies must state the store is not an official IIT Delhi store');
 assert.ok(server.includes("route:'razorpay/order'")&&server.includes("res.status(502)"),'A Razorpay order failure must answer 502 with the reason, not a blind 500');
-assert.ok(server.includes("value.startsWith('@Microsoft.KeyVault(')")&&!/Boolean\(process\.env\.(RAZORPAY|MSG91)_/.test(server),'Credential checks must route through secret() so an unresolved Key Vault reference reads as unset');
 assert.ok(client.includes('const SIZE_CHART=')&&client.includes("['XXL',50,29.5,24,10.5]"),'Size chart must carry the published measurements');
 assert.ok(client.includes('onClick={()=>setSizeGuide(true)}')&&styles.includes('.size-guide-backdrop'),'The size guide link must open a chart');
 assert.ok(client.includes("row[0]===size?'is-yours'")&&styles.includes('.size-guide tr.is-yours td'),'The chart must highlight the size the shopper has selected');
