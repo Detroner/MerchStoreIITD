@@ -1,14 +1,19 @@
 # Node
 node_modules/
 npm-debug.log
+*.log
+outputs/*.log
 
-# Environment — never commit runtime secrets
+# Environment and runtime secrets
 .env*
 !.env.example
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Archives
+*.zip
 
 # IDE
 .vscode/
