@@ -208,3 +208,51 @@
 @media(max-width:760px){.coupon-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.promotions-page .coupon-list article{display:block}.coupon-row-actions{justify-content:flex-start}.promotions-page .coupon-list article>div+div{margin-top:16px;text-align:left}}
 @media(max-width:420px){.coupon-fields{grid-template-columns:minmax(0,1fr)}}
 .orders-coupon{display:inline-block;background:var(--accent,#f5ce3e);border:1px solid #17171d;padding:2px 6px;font:700 9px 'Space Grotesk';letter-spacing:.5px}.orders-desk-table td small{display:block;margin-top:3px;font-size:10px;color:#1b7f61;font-weight:700}.orders-nocoupon{color:#bbb}
+/* Winter Collection / Drop 02 */
+@font-face{font-family:Allison;src:url('/assets/fonts/Allison-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+.winter-collection{padding-top:90px;padding-bottom:30px;scroll-margin-top:30px}
+.winter-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:35px;margin-bottom:35px}
+.winter-label{display:inline-flex;align-items:center;gap:12px;font:700 11px 'Space Grotesk';letter-spacing:1.6px}
+.winter-label i{width:7px;height:7px;border-radius:50%;background:var(--primary)}
+.winter-heading h2{font:700 clamp(55px,7vw,98px)/.95 'Space Grotesk';letter-spacing:-.065em;margin:20px 0 0}
+.winter-heading h2 em{color:var(--primary);font-style:normal}
+.winter-heading>p{font-size:14px;line-height:1.75;max-width:330px;margin:0 0 5px}
+.winter-feature{display:grid;grid-template-columns:1.05fr 1fr;border:2px solid var(--ink);background:#ede6d9;box-shadow:8px 8px 0 var(--ink)}
+.winter-gallery{position:relative;min-width:0;align-self:start;background:#929290}
+.winter-photo-label{position:absolute;z-index:1;top:20px;left:20px;padding:8px 11px;background:var(--paper);border:1px solid var(--ink);font:700 10px 'Space Grotesk';letter-spacing:1px}
+.sweatshirt-preview{position:relative;width:100%;aspect-ratio:1;overflow:hidden}
+.sweatshirt-preview>img{width:100%;height:100%;object-fit:contain!important}
+.sweatshirt-preview>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;fill:white;font:400 200px Allison,cursive}
+.winter-view-switch{display:flex;justify-content:center;gap:5px;padding:0 12px 18px;margin-top:-8px;position:relative}
+.winter-view-switch button{background:var(--paper);border:1px solid var(--ink);padding:10px 19px;font:700 11px 'Space Grotesk'}
+.winter-view-switch button[aria-pressed=true]{background:var(--ink);color:#fff}
+.winter-copy{padding:clamp(24px,3.5vw,50px);display:flex;flex-direction:column;justify-content:center;border-left:2px solid var(--ink);min-width:0}
+.winter-product-heading{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:22px 0 15px}
+.winter-product-heading h3{font:700 clamp(32px,3.8vw,54px)/1 'Space Grotesk';letter-spacing:-.06em;margin:0}
+.winter-product-heading>strong{font:700 24px 'Space Grotesk';white-space:nowrap}
+.winter-description{font-size:14px;line-height:1.7;margin:0;max-width:440px}
+.winter-specs{display:flex;flex-wrap:wrap;gap:9px 20px;margin:23px 0 32px;font-size:11px}
+.winter-specs span{display:flex;align-items:center;gap:7px}.winter-specs i{width:11px;height:11px;background:#17171d;border-radius:50%}
+.winter-customizer>label{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font:700 10px 'Space Grotesk';letter-spacing:1px}
+.winter-customizer>label>span{font-weight:500;letter-spacing:0}
+.winter-name-input{display:flex;margin-top:10px;background:#fff;border:1.5px solid var(--ink)}
+.winter-name-input:focus-within{outline:3px solid var(--primary);outline-offset:3px}
+.winter-name-input input{min-width:0;width:100%;border:0;background:transparent;padding:17px 14px;outline:none;font-size:16px}
+.winter-name-input span{font:500 11px 'Space Grotesk';align-self:center;padding-right:13px;color:#666}
+.winter-customizer p{font-size:11px;line-height:1.6;margin:10px 0 24px}
+.winter-product-link{display:flex;align-items:center;justify-content:space-between;background:var(--primary);color:#fff;border:1.5px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:16px 20px;text-decoration:none;font:700 12px 'Space Grotesk';letter-spacing:.5px}
+.winter-preview-note{font-size:10px;line-height:1.5;margin-top:18px;color:#555}
+.winter-availability{font-size:13px;font-weight:600}
+.winter-next{display:flex;align-items:center;gap:30px;border:1.5px solid var(--ink);padding:28px 35px;margin-top:26px;background:var(--accent)}
+.winter-next-number{font:700 70px/.9 'Space Grotesk';letter-spacing:-.07em;opacity:.3}
+.winter-next h3{font:700 31px 'Space Grotesk';letter-spacing:-1px;margin:5px 0}.winter-next p{margin:0;font-size:12px}
+.winter-soon{margin-left:auto;white-space:nowrap;border:1px solid var(--ink);padding:10px 15px;font:700 10px 'Space Grotesk';letter-spacing:1px}
+.pdp-gallery>div.sweatshirt-stage:first-child{height:auto;aspect-ratio:1}
+.pdp-zoom-canvas .sweatshirt-preview{width:min(86vh,90vw);height:auto}.pdp-zoom-canvas .sweatshirt-preview img{height:100%;width:100%;max-height:none;max-width:none;object-fit:contain}
+.winter-collection button:focus-visible,.winter-collection a:focus-visible{outline:3px solid var(--secondary);outline-offset:4px}
+@media(max-width:900px){.winter-heading{display:block}.winter-heading>p{margin-top:22px}.winter-feature{grid-template-columns:1fr 1fr}.winter-copy{padding:24px}.winter-product-heading{display:block}.winter-product-heading>strong{display:block;margin-top:12px}.winter-specs{margin:18px 0}.winter-gallery{align-self:center}.winter-photo-label{top:12px;left:12px}}
+@media(max-width:600px){.winter-collection{padding-top:55px}.winter-heading h2{font-size:57px}.winter-feature{grid-template-columns:1fr;box-shadow:5px 5px 0 var(--ink)}.winter-copy{border-left:0;border-top:2px solid var(--ink);padding:28px 22px}.winter-product-heading{display:flex}.winter-product-heading h3{font-size:37px}.winter-product-heading>strong{font-size:23px;margin-top:0}.winter-specs{margin:20px 0 28px}.winter-next{gap:15px;padding:23px 18px;flex-wrap:wrap}.winter-next-number{font-size:55px}.winter-next .kicker{font-size:8px;letter-spacing:1px}.winter-next h3{font-size:27px}.winter-soon{margin-left:0}.winter-label{font-size:9px}.winter-heading>p{font-size:13px}.winter-view-switch{padding-bottom:16px}}
+
+
+.sweatshirt-stage ~ .pdp-mini button:focus-visible{outline:3px solid var(--secondary)}
+.variant-block button:disabled{opacity:.4;cursor:not-allowed}
