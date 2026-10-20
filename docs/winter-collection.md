@@ -1,19 +1,24 @@
 # Winter Collection — Drop 02
 
-The storefront leads with the ₹899 Sweatshirt above the original catalogue, and reserves a Coming soon row for the planned hoodie. The original catalogue keeps its API ordering and stock behavior; the Sweatshirt is displayed in its own collection section rather than duplicated in the grid.
+The Winter Collection appears above Drop 01, with two colourway cards for the same Sweatshirt product (Black and Violet), and the existing Chill Hai? hoodie to the right on desktop. Each sweatshirt card has working colour dots and passes the selected colour to its product page. Mobile grids use two columns. Prices and stock remain controlled by Studio.
 
-Apply migration `026_winter_collection_sweatshirt.sql` through the normal deployment workflow. It creates the active product, Black colourway, XS–XXL variants, front/back media, and included white Allison customization on the back. Stock starts at zero because quantities have not been supplied. Enter actual quantities in Studio to enable purchasing. The hoodie has no SKU or purchase action yet. No sweatshirt measurements were supplied, so the existing T-shirt size chart is not shown for it.
+Migration 027 deactivates sweatshirt XS variants without deleting history or changing inventory quantities, renames the existing Lavendar colourway to Violet, and enables up to three lines of 16 characters each. Existing Lavendar links still resolve. No sweatshirt size-chart attachment was available; do not reuse the T-shirt measurements for winter products.
 
-The local preview adapter includes the same Sweatshirt shape and zero stock. Its other products remain historical test fixtures and do not represent the current production catalogue.
+Shared Studio photos are included in catalogue thumbnails and product galleries, alongside any photos assigned to the selected colourway. This restores both existing Chill Hai? photos without creating a duplicate product.
 
-## Preview and assets
+## Customization
 
-Typing a name switches to the back. The 16-character name carries to the product page through a URL parameter and then into the existing cart/order customization snapshot. The shared SVG overlay scales long names proportionally and appears only on the back, including the enlarged view. Empty names show an example on the collection page and leave the product-page back blank.
+The SVG preview uses the selected colour's image and displays up to three centered lines in the self-hosted Allison font. Text is validated in the browser and server, then preserved as a newline-separated string in the cart and order snapshot. Switching colour retains the text and shows that colour's back. No other colour's stock is used when an option is unavailable.
 
-- `public/assets/winter/sweatshirt-front.jpg`: user's supplied front image, unchanged.
-- `public/assets/winter/sweatshirt-back.png`: blank-back derivative made with the built-in image generation tool.
-- `public/assets/fonts/Allison-Regular.ttf`: self-hosted Google Fonts Allison; license in `Allison-OFL.txt` alongside it.
+## Assets
 
-Image editing prompt: “Edit the attached sweatshirt BACK product photo. Remove ONLY the large white cursive words 'Your name' at the middle back, replacing those pixels with seamless matching black fabric texture. Preserve the exact sweatshirt shape, IIT Delhi crest at upper back (all its existing detail), collar, sleeves, seams, lighting, gray background, original square composition and positioning. No other edits, no new text or designs. This blank middle back will receive a live name overlay on a website.”
+- `public/assets/winter/sweatshirt-front.jpg`: original supplied Black front.
+- `public/assets/winter/sweatshirt-back.png`: blank Black back, generated earlier.
+- `public/assets/winter/sweatshirt-violet-back.png`: blank Violet back, edited with the built-in image tool from the existing Studio upload. The original upload remains on disk.
+- `public/assets/fonts/Allison-Regular.ttf`: self-hosted Allison, with its OFL license.
 
-The photo and overlaid name are illustrative previews. The original attachments remain untouched.
+Violet edit prompt: “Use case: precise-object-edit. Edit target: the supplied violet sweatshirt back photograph. Remove ONLY the white sample words 'Your name' from the middle back and fill that area with seamlessly matching violet fabric texture. Preserve exact garment shape, position, color, lighting, seams, ribbing, gray background and square composition. Do not add any text, logos or objects. This blank back image will be used underneath a live text preview.”
+
+## Validation
+
+`npm run check` covers quote validation, multiline preservation, per-colour galleries, shared hoodie images and existing coupon checks. Browser checks cover card colour links, both colour directions, three-line preview, hoodie photo navigation, requested 20px copy and mobile layout. Deploy through the existing GitHub Actions workflow; migration 027 is applied there.

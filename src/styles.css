@@ -256,3 +256,27 @@
 
 .sweatshirt-stage ~ .pdp-mini button:focus-visible{outline:3px solid var(--secondary)}
 .variant-block button:disabled{opacity:.4;cursor:not-allowed}
+/* Winter catalogue refinements: preserve typefaces and tracking while enlarging requested copy. */
+.hero .eyebrow,.hero-meta>span:last-child,.catalog-heading>p,.catalog-heading .kicker,.catalog-filter-row .kicker,.more-soon .kicker,.site-footer>.shell>p,.winter-description,.winter-preview-note,.winter-specs,.winter-customizer>label,.customizer>.kicker{font-size:20px!important}
+.hero{min-height:0;padding-top:24px;padding-bottom:28px}
+.hero-meta{margin-top:28px;flex-wrap:wrap}
+.hero-visual{height:450px}
+.winter-collection{padding-top:42px}
+.winter-product-grid{margin-bottom:42px}
+.winter-name-input textarea,.customizer textarea{display:block;resize:vertical;width:100%;min-width:0;min-height:104px;border:0;background:transparent;padding:14px;font:400 16px/1.5 'DM Sans';color:var(--ink)}
+.winter-name-input textarea:focus{outline:none}
+.customizer textarea:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.customizer textarea[aria-invalid=true]{outline:2px solid #b42121}
+.winter-name-input span{flex-shrink:0}
+.cart-item-v2 p,.order-product p,.orders-desk-table td{white-space:pre-line}
+@media(max-width:900px){.winter-product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-visual{height:340px}.hero{gap:16px}.hero-copy{padding-top:10px}}
+@media(max-width:760px){
+ .catalog-grid,.winter-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 12px}
+ .catalog-card{min-width:0}.catalog-art{height:auto;aspect-ratio:1}
+ .catalog-info{display:block;padding:12px 4px}.catalog-info h3{font-size:17px;overflow-wrap:anywhere}
+ .catalog-info>div:last-child{text-align:left;margin-top:8px}.catalog-add{font-size:10px;padding:12px 8px;gap:6px}
+ .catalog-color-dots{flex-wrap:wrap}.catalog-card-actions{min-width:0}
+ .hero{padding-bottom:22px}.hero-visual{display:none}.hero-meta{margin-top:22px;gap:10px}.hero-meta i{width:25px}
+ .winter-collection{padding-top:28px}.winter-heading{margin-bottom:25px}.winter-product-grid{margin-bottom:32px}
+}
+@media(max-width:760px){.catalog-card-actions{display:block}.catalog-card-actions .catalog-info{width:100%}.catalog-card-actions .catalog-add{position:static;width:100%;min-width:0;margin:0;justify-content:space-between}.catalog-info>div:first-child{min-width:0;width:auto}}
