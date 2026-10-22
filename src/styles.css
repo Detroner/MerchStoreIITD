@@ -214,9 +214,11 @@
 .winter-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:35px;margin-bottom:35px}
 .winter-label{display:inline-flex;align-items:center;gap:12px;font:700 11px 'Space Grotesk';letter-spacing:1.6px}
 .winter-label i{width:7px;height:7px;border-radius:50%;background:var(--primary)}
+.winter-heading .winter-label{font-size:20px;flex-wrap:wrap}
 .winter-heading h2{font:700 clamp(55px,7vw,98px)/.95 'Space Grotesk';letter-spacing:-.065em;margin:20px 0 0}
 .winter-heading h2 em{color:var(--primary);font-style:normal}
 .winter-heading>p{font-size:14px;line-height:1.75;max-width:330px;margin:0 0 5px}
+.winter-collection .winter-heading>p{font-size:20px}
 .winter-feature{display:grid;grid-template-columns:1.05fr 1fr;border:2px solid var(--ink);background:#ede6d9;box-shadow:8px 8px 0 var(--ink)}
 .winter-gallery{position:relative;min-width:0;align-self:start;background:#929290}
 .winter-photo-label{position:absolute;z-index:1;top:20px;left:20px;padding:8px 11px;background:var(--paper);border:1px solid var(--ink);font:700 10px 'Space Grotesk';letter-spacing:1px}
