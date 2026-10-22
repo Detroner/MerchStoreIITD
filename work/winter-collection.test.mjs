@@ -2,11 +2,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import test from 'node:test';
+import {CouponError} from '../lib/coupons.mjs';
 
 const source=fs.readFileSync(new URL('../server.mjs',import.meta.url),'utf8');
 const quoteSource=source.split('\n').find(line=>line.startsWith('async function calculateQuote('));
 const sweatshirt={id:'sweatshirt-m',product_id:'sweatshirt',slug:'winter-sweatshirt',name:'Sweatshirt',size:'M',color:'Black',sku:'IITD-WINTER-SWEAT-BLK-M',base_price:89900,stock_on_hand:2,reserved_stock:0,customizable:true,enabled:true,max_characters:16,allowed_pattern:'^[A-Za-z0-9 ._-]+$',placements:['Back'],styles:['Allison'],text_colors:['White'],surcharge:0};
-const calculate=(items,variant=sweatshirt)=>vm.runInNewContext(quoteSource+';calculateQuote(items)',{items,query:async()=>({rows:[variant]}),paymentStatus:()=>({provider:'test'})});
+const calculate=(items,variant=sweatshirt)=>vm.runInNewContext(quoteSource+';calculateQuote(items)',{items,CouponError,query:async()=>({rows:[variant]}),paymentStatus:()=>({provider:'test'})});
 
 test('Sweatshirt quote keeps the name, Allison style, Back placement and ₹899 price',async()=>{
   const quote=await calculate([{variantId:sweatshirt.id,qty:1,customization:{text:'  Tanish  ',placement:'Back',style:'Allison',color:'White'}}]);
@@ -52,4 +53,29 @@ test('product galleries include shared hoodie photos and only the chosen sweatsh
   assert.deepEqual(Array.from(gallery({media},violet),x=>x.id),['violet-front','violet-back']);
   assert.deepEqual(Array.from(gallery({media},black),x=>x.id),['black-back']);
   assert.equal(gallery({media}, {...violet,media:[media[1],media[2]]}).length,2);
+});
+
+test('checkout rejects fractional, zero and excessive quantities',async()=>{
+  for(const qty of [0,-1,1.5,11,'not-a-number'])await assert.rejects(calculate([{variantId:sweatshirt.id,qty}]),/whole quantity/);
+});
+
+test('customized lines sharing one variant cannot exceed its combined stock',async()=>{
+  const line=text=>({variantId:sweatshirt.id,qty:2,customization:{text,placement:'Back'}});
+  await assert.rejects(calculate([line('One'),line('Two')]),/unavailable in that quantity/);
+  const quote=await calculate([line('One'),line('Two')],{...sweatshirt,stock_on_hand:4});
+  assert.equal(quote.total,359600);
+});
+
+test('checkout rejects customization styles and ink colours that the product does not offer',async()=>{
+  for(const extra of [{style:'Unknown font'},{color:'Red'}])await assert.rejects(calculate([{variantId:sweatshirt.id,qty:1,customization:{text:'Tanish',placement:'Back',...extra}}]),/available customization style/);
+});
+
+test('saved bags refresh renamed hoodie colours and discard retired options',()=>{
+  const client=fs.readFileSync(new URL('../src/main.jsx',import.meta.url),'utf8');
+  const helper=client.slice(client.indexOf('function reconcileCart('),client.indexOf('function useCart('));
+  const reconcile=vm.runInNewContext(helper+';reconcileCart');
+  const cart=[{productId:'hood',variantId:'black-m',color:'Default',qty:2,customization:null},{productId:'hood',variantId:'test-m',qty:1}];
+  const catalog=[{id:'hood',name:'Chill Hai?',image:'/black.png',colorways:[{id:'black',image:'/black.png'}],variants:[{id:'black-m',colorwayId:'black',color:'Black',price:99900,active:true},{id:'test-m',colorwayId:'test',color:'test',price:99900,active:false}]}];
+  const result=reconcile(cart,catalog);
+  assert.equal(result.length,1);assert.equal(result[0].color,'Black');assert.equal(result[0].qty,2);assert.equal(result[0].price,99900);
 });

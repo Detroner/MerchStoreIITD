@@ -99,7 +99,7 @@ assert.ok(server.includes('function applyQuoteTotal(quote){quote.total=quote.sub
 const historyFields=[...server.matchAll(/INSERT INTO order_status_history\([^)]*\)[\s\S]{0,120}?\[[^,\[\]]+,'([a-z_]+)'/g)].map(m=>m[1]);
 const badHistoryFields=historyFields.filter(name=>!['order_status','payment_status','fulfilment_status'].includes(name));
 assert.ok(historyFields.length>0&&!badHistoryFields.length,`order_status_history.field_name must be a constrained column name, found: ${badHistoryFields.join(', ')}`);
-assert.ok(client.includes("api('/api/catalog?limit=100')")&&client.includes('activeVariants')&&client.includes('discontinued'),'Cart must reconcile discontinued products against the active catalogue');
+assert.ok(client.includes("api('/api/catalog?limit=100')")&&client.includes('reconcileCart')&&client.includes('discontinued'),'Cart must reconcile discontinued products against the active catalogue');
 assert.ok(client.includes('onTouchStart={handleTouchStart}')&&client.includes('onTouchEnd={handleTouchEnd}')&&client.includes('moveGallery'),'Product gallery must support swipe navigation alongside buttons');
 assert.ok(client.includes('onClick={event=>selectColor(event,colorway)}'),'Catalogue colour dots must switch the card thumbnail');
 assert.ok(client.includes('MORE SOON'),'Storefront must include the More Soon message');
