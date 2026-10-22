@@ -233,6 +233,7 @@
 .winter-description{font-size:14px;line-height:1.7;margin:0;max-width:440px}
 .winter-specs{display:flex;flex-wrap:wrap;gap:9px 20px;margin:23px 0 32px;font-size:11px}
 .winter-specs span{display:flex;align-items:center;gap:7px}.winter-specs i{width:11px;height:11px;background:#17171d;border-radius:50%}
+.winter-color-selector{margin:22px 0 0}.winter-color-selector+.winter-specs{margin-top:18px}
 .winter-customizer>label{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font:700 10px 'Space Grotesk';letter-spacing:1px}
 .winter-customizer>label>span{font-weight:500;letter-spacing:0}
 .winter-name-input{display:flex;margin-top:10px;background:#fff;border:1.5px solid var(--ink)}

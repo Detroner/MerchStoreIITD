@@ -1,14 +1,16 @@
 # Winter Collection — Drop 02
 
-The Winter Collection appears above Drop 01, with two colourway cards for the same Sweatshirt product (Black and Violet), and the existing Chill Hai? hoodie to the right on desktop. Each sweatshirt card has working colour dots and passes the selected colour to its product page. Mobile grids use two columns. Prices and stock remain controlled by Studio.
+The Winter Collection appears above Drop 01, with two colourway cards for the same Sweatshirt product (Black and Lavender), and the existing Chill Hai? hoodie to the right on desktop. Each sweatshirt card has working colour dots and passes the selected colour to its product page. The larger live preview also has Black/Lavender buttons; the selected colour and multiline name carry through its product link. Mobile grids use two columns. Prices and stock remain controlled by Studio.
 
-Migration 027 deactivates sweatshirt XS variants without deleting history or changing inventory quantities, renames the existing Lavendar colourway to Violet, and enables up to three lines of 16 characters each. Existing Lavendar links still resolve. No sweatshirt size-chart attachment was available; do not reuse the T-shirt measurements for winter products.
+Migration 027 deactivates sweatshirt XS variants without deleting history and enables up to three lines of 16 characters each. Migration 028 renames the same colourway to Lavender, preserving IDs, SKUs, photos and order history; both old Violet and Lavendar links still resolve. It also sets Black S–XXL to 20 available units each, as confirmed by the owner on 22 October 2026, preserving reservations and recording the stock adjustment in the inventory ledger.
+
+Both the sweatshirt and Chill Hai? hoodie use the same size-guide dialog as The Dogra Drip, with the supplied winter measurements in inches: S 26 length / 40 chest; M 27 / 42; L 28 / 44; XL 29 / 46; XXL 30 / 48. The T-shirt chart remains unchanged.
 
 Shared Studio photos are included in catalogue thumbnails and product galleries, alongside any photos assigned to the selected colourway. This restores both existing Chill Hai? photos without creating a duplicate product.
 
 ## Customization
 
-The SVG preview uses the selected colour's image and displays up to three centered lines in the self-hosted Allison font. Text is validated in the browser and server, then preserved as a newline-separated string in the cart and order snapshot. Switching colour retains the text and shows that colour's back. No other colour's stock is used when an option is unavailable.
+The SVG preview uses the selected colour's image and displays up to three centered lines in the self-hosted Allison font. Explicit front/back photo labels take priority; otherwise the thumbnail is the front and the next active image is the back. Replacement uploads therefore work with generic labels and new filenames. The same selection is used on the homepage, product page and enlarged view. Text is validated in the browser and server, then preserved as a newline-separated string in the cart and order snapshot. Switching colour retains the text and shows that colour's back. No other colour's stock is used when an option is unavailable.
 
 ## Assets
 
@@ -21,4 +23,4 @@ Violet edit prompt: “Use case: precise-object-edit. Edit target: the supplied 
 
 ## Validation
 
-`npm run check` covers quote validation, multiline preservation, per-colour galleries, shared hoodie images and existing coupon checks. Browser checks cover card colour links, both colour directions, three-line preview, hoodie photo navigation, requested 20px copy and mobile layout. Deploy through the existing GitHub Actions workflow; migration 027 is applied there.
+`npm run check` covers quote validation, multiline preservation, per-colour galleries, replacement back uploads, shared hoodie images, legacy colour links, exact size measurements and existing coupon checks. Browser checks cover homepage colour selection, name handoff, product and enlarged previews, and both winter size guides. Deploy through the existing GitHub Actions workflow; migration 028 is applied there.
