@@ -40,7 +40,9 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # The dedicated audit step below is the release gate. Avoid repeating it
+        # during installation, where registry retries can delay the deployment.
+        run: npm ci --no-audit --no-fund
 
       - name: Check backend syntax and source contracts
         run: npm run check
@@ -102,7 +104,7 @@ jobs:
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           DATABASE_SSL: ${{ env.DATABASE_SSL }}
-        run: npm ci && npm run db:migrate
+        run: npm ci --no-audit --no-fund && npm run db:migrate
 
       - name: Remove temporary PostgreSQL access
         if: always()
@@ -119,10 +121,19 @@ jobs:
         run: |
           # Zip deploy does not reliably run the Node build step on this App Service.
           # Include the production dependency tree so node server.mjs can start after a clean deploy.
-          npm ci --omit=dev
+          npm ci --omit=dev --no-audit --no-fund
           printf '%s' "$GITHUB_SHA" > BUILD_SHA
           zip -qr /tmp/merchstore-iitd-${GITHUB_SHA}.zip . \
             -x '.git/*' '.github/*' 'tools/*' 'work/*' '*.log' '.env*' 'audit-*.md' 'SECURITY_AUDIT_PRODUCTION_READINESS.md'
+
+      - name: Refresh Azure login before deployment
+        # GitHub's OIDC assertion may expire while dependencies are prepared.
+        # Obtain a fresh assertion immediately before requesting the deployment.
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy application package to App Service
         run: |
