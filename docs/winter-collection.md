@@ -1,6 +1,6 @@
 # Winter Collection — Drop 02
 
-The Winter Collection appears above Drop 01, with two colourway cards for the same Sweatshirt product (Black and Lavender), and the existing Chill Hai? hoodie to the right on desktop. Each sweatshirt card has working colour dots and passes the selected colour to its product page. The larger live preview also has Black/Lavender buttons; the selected colour and multiline name carry through its product link. Mobile grids use two columns. Prices and stock remain controlled by Studio.
+The Winter Collection appears above Drop 01 in this order: Black Sweatshirt, Chill Hai? hoodie, Lavender Sweatshirt. The hoodie is the middle desktop card; the same reading order is used on mobile. Each sweatshirt card has working colour dots and passes the selected colour to its product page. The larger live preview also has Black/Lavender buttons; the selected colour and multiline name carry through its product link. Mobile grids use two columns. Prices and stock remain controlled by Studio.
 
 Migration 027 deactivates sweatshirt XS variants without deleting history and enables up to three lines of 16 characters each. Migration 028 renames the same colourway to Lavender, preserving IDs, SKUs, photos and order history; both old Violet and Lavendar links still resolve. It also sets Black S–XXL to 20 available units each, as confirmed by the owner on 22 October 2026, preserving reservations and recording the stock adjustment in the inventory ledger.
 
