@@ -283,3 +283,17 @@
  .winter-collection{padding-top:28px}.winter-heading{margin-bottom:25px}.winter-product-grid{margin-bottom:32px}
 }
 @media(max-width:760px){.catalog-card-actions{display:block}.catalog-card-actions .catalog-info{width:100%}.catalog-card-actions .catalog-add{position:static;width:100%;min-width:0;margin:0;justify-content:space-between}.catalog-info>div:first-child{min-width:0;width:auto}}
+
+/* Studio fulfilment: keep each printed line legible and preserve customer spacing. */
+.orders-desk-table .order-customization{min-width:240px;max-width:340px;white-space:normal;vertical-align:top}
+.order-customized-badge{display:inline-block;padding:5px 8px;border-radius:5px;background:#e0f0e5;color:#245a38;font-size:11px}
+.order-customization ol{list-style:none;margin:10px 0;padding:0;display:grid;gap:7px}
+.order-customization li{display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px;align-items:baseline}
+.order-customization li span{font-size:10px;color:#666}
+.order-customization li strong{font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;text-transform:none;letter-spacing:normal}
+.order-customization li em{font-size:12px;font-weight:400;color:#777}
+.order-customization dl{margin:10px 0 0;display:grid;gap:4px;font-size:11px}
+.order-customization dl div{display:flex;gap:8px}.order-customization dt{color:#666;min-width:54px}.order-customization dd{margin:0;overflow-wrap:anywhere}
+.order-no-customization{color:#666;font-size:12px}
+.colorway-row.colorway-removed{border-style:dashed;background:#f5f5f3}.colorway-removed .colorway-preview{opacity:.55}
+.colorway-row-copy .danger-link{color:#a12d26}.colorway-row-copy .restore-colorway{color:#245a38}.colorway-row-copy button:disabled{opacity:.5;cursor:wait}

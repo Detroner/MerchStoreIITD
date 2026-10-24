@@ -58,6 +58,7 @@ for product in PRODUCTS:
 
 from winter_preview_fixture import sweatshirt
 PRODUCTS.insert(0,sweatshirt())
+PRODUCTS[0].update({'category_id':'cat-apparel','product_type_id':'type-sweatshirt','category':'Apparel','type':'Sweatshirt','badge':'WINTER COLLECTION'})
 
 REVIEWS=[{'id':'review-1','product_id':'hood','rating':5,'title':'Feels properly premium','body':'The weight is perfect for winter mornings and the fit is relaxed without looking oversized. The embroidery stayed sharp after washing.','status':'approved','full_name':'Ananya S.','submitted_at':'2026-08-07T10:00:00Z'},{'id':'review-2','product_id':'hood','rating':4,'title':'A new late-lab uniform','body':'Warm, comfortable and the pockets are actually useful. I sized up for a roomier fit.','status':'approved','full_name':'Kabir M.','submitted_at':'2026-08-05T10:00:00Z'},{'id':'review-3','product_id':'tee','rating':5,'title':'The graphic lands','body':'Soft fabric and a clean print. Looks even better in person.','status':'pending','full_name':'Rhea A.','submitted_at':'2026-08-09T10:00:00Z'}]
 USERS={};SESSIONS={};OTP={};ADMIN_SESSIONS=set();ADDRESSES={}
@@ -66,6 +67,7 @@ ORDERS=[{'id':'order-1','order_no':'IITD-2048','customer_name':'Demo Customer','
 ORDER_HISTORY=[]
 ORDERS[0].update({'phone':'+919876500011','hostel':'Nilgiri','room_number':'118','payment_status':'paid','delivered_at':'2026-08-06T12:00:00Z'})
 PENDING_ITEMS=[{'id':'demo-item-3','productId':'tee','name':'Main Building Tee','slug':'main-building-tee','sku':'IITD-TEE-05','size':'M','color':'Cream','image':'/assets/merch-hero.png','quantity':2,'unitPrice':99900,'deliveredAt':None,'reviewed':False,'customization':None},{'id':'demo-item-4','productId':'cap','name':'Red Brick Cap','slug':'red-brick-cap','sku':'IITD-CAP-01','size':'One Size','color':'Campus Edition','image':'/assets/merch-hero.png','quantity':1,'unitPrice':69900,'deliveredAt':None,'reviewed':False,'customization':None}]
+PENDING_ITEMS[0]['customization']={'text':'Tanish\nIIT Delhi\nClass of 2026','placement':'Middle back','style':'Allison','color':'White'}
 ORDERS.append({'id':'order-2','order_no':'IITD-2049','coupon':'CAMPUS10','discount':26970,'customer_name':'Aarav Sharma','phone':'+919812345678','hostel':'Karakoram','room_number':'112','payment_status':'paid','total':269700,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-14T11:20:00Z','items':PENDING_ITEMS})
 ORDERS.append({'id':'order-3','order_no':'IITD-2050','customer_name':'Meera Iyer','phone':'+919845612300','hostel':'Himadri','room_number':'304','payment_status':'pending','total':59900,'order_status':'placed','fulfilment_status':'unfulfilled','created_at':'2026-09-17T18:05:00Z','items':[{'id':'demo-item-5','productId':'tote','name':'Hauz Khas Tote','slug':'hauz-khas-tote','sku':'IITD-TOTE-01','size':'One Size','color':'Campus Edition','image':'/assets/merch-hero.png','quantity':1,'unitPrice':59900,'deliveredAt':None,'reviewed':False,'customization':None}]})
 COUPONS=[{'id':'coupon-1','code':'CAMPUS10','type':'percentage','value':10,'min_order':99900,'usage_limit':500,'used_count':84,'active':True},{'id':'coupon-2','code':'FREESHIP','type':'free_shipping','value':0,'min_order':49900,'usage_limit':250,'used_count':41,'active':False}]
@@ -174,7 +176,7 @@ class Handler(BaseHTTPRequestHandler):
       'hostel':order.get('hostel',''),'roomNumber':order.get('room_number',''),
       'username':order.get('customer_name',''),'phone':order.get('phone',''),'deliveredAt':order.get('delivered_at'),
       'coupon':order.get('coupon',''),'discount':int(order.get('discount',0)),
-      'items':[{'id':i['id'],'name':i['name'],'color':i['color'],'size':i['size'],'quantity':i['quantity'],'lineTotal':i['unitPrice']*i['quantity']} for i in order['items']]}
+      'items':[{'id':i['id'],'name':i['name'],'color':i['color'],'size':i['size'],'quantity':i['quantity'],'lineTotal':i['unitPrice']*i['quantity'],'customized':bool(i.get('customization')),'customization':i.get('customization')} for i in order['items']]}
     done=lambda o:o.get('fulfilment_status')=='delivered'
     # server.mjs: WHERE o.order_status<>'cancelled' AND o.payment_status=ANY(PAID_STATUSES)
     settled=[o for o in ORDERS if o.get('payment_status','paid') in ('paid','captured','demo_paid')]
@@ -195,7 +197,7 @@ class Handler(BaseHTTPRequestHandler):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
    customers=[{'id':str(i+1),'full_name':u.get('fullName',''),'phone_e164':phone,'affiliation':u.get('affiliation'),'created_at':'2026-08-09T10:00:00Z'} for i,(phone,u) in enumerate(USERS.items())]
-   products=[{'id':p['id'],'name':p['name'],'slug':p['slug'],'category_id':p['category_id'],'product_type_id':p['product_type_id'],'short_description':p.get('short_description',''),'description':p['description'],'base_price':p['price'],'compare_price':p['compare_price'],'badge':p['badge'],'card_color':p['color'],'status':p['status'],'featured':p['featured'],'customizable':p['customizable'],'customization':p['customization'],'colorways':p['colorways'],'media':p.get('media',[]),'category':p['category'],'product_type':p['type'],'image':p['image'],'stock':sum(v['stock'] for v in p['variants']),'sort_order':p.get('sort_order',0),'deleted_at':p.get('deleted_at')} for p in PRODUCTS]
+   products=[{'id':p['id'],'name':p['name'],'slug':p['slug'],'category_id':p['category_id'],'product_type_id':p['product_type_id'],'short_description':p.get('short_description',''),'description':p['description'],'base_price':p['price'],'compare_price':p['compare_price'],'badge':p['badge'],'card_color':p['color'],'status':p['status'],'featured':p['featured'],'customizable':p['customizable'],'customization':p['customization'],'colorways':p['colorways'],'variants':p['variants'],'media':p.get('media',[]),'category':p['category'],'product_type':p['type'],'image':p['image'],'stock':sum(v['stock'] for v in p['variants']),'sort_order':p.get('sort_order',0),'deleted_at':p.get('deleted_at')} for p in PRODUCTS]
    breakdown=[]
    for order in ORDERS:
     for item in order['items']:
