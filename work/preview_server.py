@@ -193,6 +193,10 @@ class Handler(BaseHTTPRequestHandler):
     lines=['THE IIT DELHI DROP — PRODUCTION UPDATE',f"Batch: {batch['batch_no']}",'',f"NEW: {len(ORDERS)} orders / {batch['units']} pieces"]
     for item in batch['items']:lines.append(f"{item['product_name']} — {item['color']}: {item['size']} {item['quantity']}")
     lines.extend(['',f"CUSTOMIZED: {sum(x['quantity'] for x in batch['items'] if x.get('custom_text'))} pieces",'','PENDING FROM EARLIER BATCHES: 0 pieces','','Please acknowledge quantities and share the expected ready date.']);return self.json_out({'batch':batch,'message':'\n'.join(lines)})
+  if path=='/api/admin/overview':
+   token=cookie_value(self.headers,'admin_session')
+   if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
+   return self.json_out({'customers':len(USERS),'orders':sum(o.get('payment_status') in ('paid','captured','demo_paid') and o.get('order_status')!='cancelled' for o in ORDERS),'pendingReviews':sum(r['status']=='pending' for r in REVIEWS),'updatedAt':datetime.now(timezone.utc).isoformat()})
   if path=='/api/admin/data':
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
@@ -523,7 +527,7 @@ class Handler(BaseHTTPRequestHandler):
    token=cookie_value(self.headers,'admin_session')
    if token not in ADMIN_SESSIONS or self.headers.get('X-Admin-Proof')!='demo-admin-proof':return self.json_out({'error':'Administrator authentication required.'},401)
    if path=='/api/admin/settings':
-    allowed={'brand','eyebrow','announcement','headline','subhead','primary','secondary','accent','background','ink','darkPrimary','darkSecondary','darkAccent','darkBackground','darkInk','darkStoryCopy','darkKineticBackground','radius','motion','motionIntensity','motionPreset','heroImage','heroButton','storyTitle','storyBody','footerNote','policyTerms','policyPrivacy','policyShipping','typography'}
+    allowed={'brand','eyebrow','announcement','marqueeText','headline','subhead','primary','secondary','accent','background','ink','darkPrimary','darkSecondary','darkAccent','darkBackground','darkInk','darkStoryCopy','darkKineticBackground','radius','motion','motionIntensity','motionPreset','heroImage','heroButton','storyTitle','storyBody','footerNote','policyTerms','policyPrivacy','policyShipping','typography'}
     SETTINGS.update({key:str(value)[:1000] for key,value in body.items() if key in allowed});return self.json_out({'ok':True,'settings':SETTINGS})
    if path.startswith('/api/admin/products/'):
     product=next((p for p in PRODUCTS if p['id']==path.rsplit('/',1)[1]),None)
