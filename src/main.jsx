@@ -141,8 +141,9 @@ const SIZE_CHART={title:'Oversized drop-shoulder t-shirt',strap:'Relaxed fit. St
  features:['Premium cotton','Breathable fabric','Durable & long lasting','Machine washable'],
  tolerance:'All measurements are in inches. Expect a tolerance of ± 1 inch.'};
 const WINTER_SIZE_CHART={title:'Hoodie & sweatshirt',strap:'Find your fit.',
- columns:['Size','Length','Chest'],rows:[['S',26,40],['M',27,42],['L',28,44],['XL',29,46],['XXL',30,48]],
- fitLabel:'FIND YOUR FIT',fit:'Compare these measurements with a hoodie or sweatshirt that fits you well.',
+ columns:['Size','Chest','Waist','Arm length'],
+ rows:[['XS','30¾ - 33¾','26 - 29¼','23¼'],['S','33¾ - 35½','29¼ - 30¾','23¼ - 23¾'],['M','37 - 38½','32¼ - 33¾','23¾ - 24'],['L','40¼ - 41¾','35½ - 37','24¼ - 24½'],['XL','43¼ - 44¾','38¾ - 40½','24½'],['XXL','46½ - 48','42¼ - 44','24½ - 24¾']],
+ fitLabel:'FIND YOUR FIT',fit:'Use the chest, waist and arm-length measurements above to find your size.',
  features:[],tolerance:'All measurements are in inches.'};
 // Terms, privacy and shipping are editable from Studio. The stored form is plain text where a
 // '## ' line starts a section, which is far easier to edit in a textarea than JSON. When a

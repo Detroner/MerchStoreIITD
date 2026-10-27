@@ -36,8 +36,8 @@ test('old violet and misspelled lavender links resolve to Lavender only',()=>{
 test('winter measurements match the supplied chart and leave Dogra measurements intact',()=>{
   const start=source.indexOf('const SIZE_CHART='),end=source.indexOf('// Terms, privacy',start);
   const {winter,tee}=vm.runInNewContext(source.slice(start,end)+';({winter:WINTER_SIZE_CHART,tee:SIZE_CHART})');
-  assert.deepEqual(JSON.parse(JSON.stringify(winter.columns)),['Size','Length','Chest']);
-  assert.deepEqual(JSON.parse(JSON.stringify(winter.rows)),[['S',26,40],['M',27,42],['L',28,44],['XL',29,46],['XXL',30,48]]);
+  assert.deepEqual(JSON.parse(JSON.stringify(winter.columns)),['Size','Chest','Waist','Arm length']);
+  assert.deepEqual(JSON.parse(JSON.stringify(winter.rows)),[['XS','30¾ - 33¾','26 - 29¼','23¼'],['S','33¾ - 35½','29¼ - 30¾','23¼ - 23¾'],['M','37 - 38½','32¼ - 33¾','23¾ - 24'],['L','40¼ - 41¾','35½ - 37','24¼ - 24½'],['XL','43¼ - 44¾','38¾ - 40½','24½'],['XXL','46½ - 48','42¼ - 44','24½ - 24¾']]);
   assert.equal(tee.rows.find(row=>row[0]==='M')[1],44);
   assert.equal(tee.columns.length,5);
 });
